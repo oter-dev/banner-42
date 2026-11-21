@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,600;0,700;0,800;0,900;1,800;1,900&display=swap" rel="stylesheet">
 <style>
   * {
     box-sizing: border-box;
@@ -24,20 +24,18 @@
     overflow: hidden;
   }
 
-  /* Контейнер без transform: skewX — текст и QR рендерятся попиксельно резко */
   .banner {
-    width: 1200px;
+    width: 1240px;
     height: 430px;
     position: relative;
   }
 
-  /* Векторный скошенный фон + тень только на подложке */
   .banner-bg {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
-    filter: drop-shadow(0 24px 38px rgba(0, 0, 0, 0.72));
+    filter: drop-shadow(0 24px 38px rgba(0, 0, 0, 0.75));
     pointer-events: none;
   }
 
@@ -47,15 +45,17 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 40px 84px 40px 92px;
+    gap: 56px;
+    padding: 36px 82px 36px 90px;
     position: relative;
     z-index: 2;
   }
 
-  /* Левая часть с текстом */
+  /* Левая текстовая зона */
   .text-zone {
     flex: 1;
-    padding-right: 48px;
+    min-width: 0;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -65,31 +65,33 @@
   .top-row {
     display: flex;
     align-items: center;
-    gap: 16px;
-    margin-bottom: 24px;
+    gap: 14px;
+    margin-bottom: 22px;
+    flex-wrap: nowrap;
   }
 
   .badge {
     display: inline-flex;
     align-items: center;
-    gap: 11px;
-    font-size: 17px;
+    gap: 10px;
+    font-size: 16px;
     font-weight: 800;
-    letter-spacing: 2px;
+    letter-spacing: 1.8px;
     text-transform: uppercase;
     color: #ffffff;
-    background: rgba(255, 46, 36, 0.16);
-    border: 2px solid rgba(255, 59, 48, 0.5);
-    padding: 8px 18px;
+    background: rgba(255, 77, 166, 0.16);
+    border: 2px solid rgba(255, 77, 166, 0.55);
+    padding: 7px 16px;
     border-radius: 10px;
+    white-space: nowrap;
   }
 
   .live-dot {
-    width: 11px;
-    height: 11px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
-    background: #ff3b30;
-    box-shadow: 0 0 14px #ff3b30;
+    background: #a3f048;
+    box-shadow: 0 0 14px #a3f048;
     animation: pulse 2s ease-in-out infinite;
   }
 
@@ -99,19 +101,36 @@
   }
 
   .stamp-tag {
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 800;
     letter-spacing: 1.6px;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.85);
-    border: 2px dashed rgba(255, 255, 255, 0.32);
-    padding: 8px 16px;
+    color: #b7f36b;
+    background: rgba(163, 240, 72, 0.08);
+    border: 2px dashed rgba(163, 240, 72, 0.45);
+    padding: 7px 14px;
     border-radius: 8px;
+    white-space: nowrap;
+  }
+
+  .news-pill {
+    font-size: 16px;
+    font-weight: 900;
+    font-style: italic;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #ff69b4;
+    text-shadow:
+      0 2px 0 #700a43,
+      0 0 14px rgba(255, 77, 166, 0.55);
+    white-space: nowrap;
   }
 
   .slide-container {
     position: relative;
-    height: 192px;
+    height: 184px;
+    width: 100%;
+    overflow: hidden;
   }
 
   .slide {
@@ -131,53 +150,92 @@
   }
 
   .title {
-    font-size: 56px;
+    font-size: 48px;
     font-weight: 900;
     color: #ffffff;
-    line-height: 1.06;
-    letter-spacing: -1px;
+    line-height: 1.08;
+    letter-spacing: -0.8px;
     text-transform: uppercase;
-    text-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+    text-shadow: 0 4px 22px rgba(0, 0, 0, 0.65);
   }
 
   .title span {
-    color: #ff3326;
-    text-shadow: 0 0 36px rgba(255, 51, 38, 0.48);
+    color: #ff5cb0;
+    text-shadow:
+      0 3px 0 #6e0940,
+      0 6px 24px rgba(255, 77, 166, 0.55);
   }
 
   .subtitle {
-    font-size: 25px;
-    color: #c4c4ce;
+    font-size: 24px;
+    color: #cde3dc;
     margin-top: 14px;
     font-weight: 600;
     line-height: 1.32;
   }
 
-  /* Индикатор слайдов */
+  .subtitle b {
+    color: #b7f36b;
+    font-weight: 800;
+  }
+
+  /* Анимированный прогресс слайдов */
   .progress-dots {
     display: flex;
-    gap: 12px;
-    margin-top: 20px;
+    gap: 10px;
+    margin-top: 18px;
   }
 
   .dot {
-    width: 32px;
-    height: 5px;
-    border-radius: 3px;
-    background: rgba(255, 255, 255, 0.18);
-    transition: all 0.35s ease;
+    width: 34px;
+    height: 6px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.16);
+    overflow: hidden;
+    position: relative;
+    transition: width 0.35s ease;
   }
 
   .dot.active {
-    width: 58px;
-    background: #ff3326;
-    box-shadow: 0 0 16px rgba(255, 51, 38, 0.7);
+    width: 68px;
   }
 
-  /* Правая часть с 3D-карточкой QR */
+  .dot.active::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, #ff5cb0, #a3f048);
+    border-radius: 4px;
+    transform-origin: left;
+    animation: fillBar 3.5s linear forwards;
+  }
+
+  @keyframes fillBar {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+
+  /* Вертикальный разделитель */
+  .divider {
+    width: 2px;
+    height: 290px;
+    flex-shrink: 0;
+    margin-right: -28px;
+    margin-left: -28px;
+    background: linear-gradient(
+      180deg,
+      rgba(163, 240, 72, 0) 0%,
+      rgba(163, 240, 72, 0.45) 35%,
+      rgba(255, 87, 173, 0.55) 65%,
+      rgba(255, 87, 173, 0) 100%
+    );
+    border-radius: 2px;
+  }
+
+  /* Правая зона с 3D QR-карточкой */
   .qr-wrapper {
-    width: 300px;
-    height: 300px;
+    width: 292px;
+    height: 292px;
     perspective: 1400px;
     flex-shrink: 0;
     position: relative;
@@ -186,8 +244,10 @@
   .qr-glow {
     position: absolute;
     inset: -22px;
-    border-radius: 42px;
-    background: radial-gradient(circle, rgba(255, 51, 38, 0.32) 0%, transparent 72%);
+    border-radius: 44px;
+    background:
+      radial-gradient(circle at 28% 28%, rgba(163, 240, 72, 0.36) 0%, transparent 60%),
+      radial-gradient(circle at 75% 75%, rgba(255, 77, 166, 0.4) 0%, transparent 62%);
     filter: blur(16px);
     pointer-events: none;
   }
@@ -214,14 +274,14 @@
     padding: 17px;
     box-shadow:
       0 22px 48px rgba(0, 0, 0, 0.62),
-      0 0 0 2px rgba(255, 255, 255, 0.28);
+      0 0 0 2.5px rgba(163, 240, 72, 0.5);
   }
 
   .qr-front img {
     width: 100%;
     height: 100%;
     object-fit: contain;
-    border-radius: 16px;
+    border-radius: 14px;
     display: block;
     image-rendering: -webkit-optimize-contrast;
   }
@@ -230,7 +290,7 @@
     position: absolute;
     width: 24px;
     height: 24px;
-    border: 4.5px solid #ff3326;
+    border: 4.5px solid #ff4da6;
     pointer-events: none;
   }
   .corner.tl { top: 9px; left: 9px; border-right: 0; border-bottom: 0; border-top-left-radius: 11px; }
@@ -240,29 +300,21 @@
 
   .qr-back {
     transform: rotateY(180deg);
-    background: linear-gradient(145deg, #16161a 0%, #30090f 100%);
-    border: 2.5px solid rgba(255, 51, 38, 0.6);
+    background: linear-gradient(155deg, #9ce655 0%, #44c48a 52%, #1d8a8e 100%);
+    border: 3px solid #ff69b4;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 16px;
     box-shadow: 0 22px 48px rgba(0, 0, 0, 0.68);
   }
 
   .qr-back svg {
-    width: 88px;
-    height: 88px;
-    fill: #ffffff;
-    filter: drop-shadow(0 0 22px rgba(255, 51, 38, 0.55));
-  }
-
-  .qr-back span {
-    font-size: 21px;
-    font-weight: 800;
-    letter-spacing: 2.5px;
-    color: #ff3326;
-    text-transform: uppercase;
+    width: 108px;
+    height: 108px;
+    fill: #ff57ad;
+    stroke: #700a43;
+    stroke-width: 1px;
+    filter: drop-shadow(0 8px 20px rgba(112, 10, 67, 0.45));
   }
 
   @keyframes spinPause {
@@ -278,45 +330,58 @@
 <body>
 
 <div class="banner">
-  <!-- Чёткая векторная скошенная карточка -->
-  <svg class="banner-bg" viewBox="0 0 1200 430" xmlns="http://www.w3.org/2000/svg">
+  <svg class="banner-bg" viewBox="0 0 1240 430" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="bgGrad" x1="0%" y1="30%" x2="100%" y2="75%">
-        <stop offset="0%" stop-color="#060608"/>
-        <stop offset="46%" stop-color="#0b090b"/>
-        <stop offset="78%" stop-color="#1d070b"/>
-        <stop offset="100%" stop-color="#3c0b12"/>
+        <stop offset="0%" stop-color="#050908"/>
+        <stop offset="48%" stop-color="#071312"/>
+        <stop offset="80%" stop-color="#0e2c26"/>
+        <stop offset="100%" stop-color="#1b5444"/>
       </linearGradient>
 
       <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="rgba(255,255,255,0.22)"/>
-        <stop offset="60%" stop-color="rgba(255,255,255,0.10)"/>
-        <stop offset="100%" stop-color="rgba(255,51,38,0.45)"/>
+        <stop offset="0%" stop-color="rgba(163,240,72,0.5)"/>
+        <stop offset="52%" stop-color="rgba(255,255,255,0.14)"/>
+        <stop offset="100%" stop-color="rgba(255,87,173,0.72)"/>
       </linearGradient>
 
-      <radialGradient id="redGlow" cx="84%" cy="46%" r="44%">
-        <stop offset="0%" stop-color="rgba(255,46,36,0.34)"/>
-        <stop offset="100%" stop-color="rgba(255,46,36,0)"/>
+      <radialGradient id="slimeGlow" cx="84%" cy="42%" r="44%">
+        <stop offset="0%" stop-color="rgba(163,240,72,0.28)"/>
+        <stop offset="60%" stop-color="rgba(40,184,153,0.14)"/>
+        <stop offset="100%" stop-color="rgba(40,184,153,0)"/>
       </radialGradient>
 
-      <pattern id="halftone" width="12" height="12" patternUnits="userSpaceOnUse">
-        <circle cx="2" cy="2" r="1" fill="rgba(255,255,255,0.035)"/>
-      </pattern>
+      <radialGradient id="pinkGlow" cx="76%" cy="88%" r="36%">
+        <stop offset="0%" stop-color="rgba(255,77,166,0.24)"/>
+        <stop offset="100%" stop-color="rgba(255,77,166,0)"/>
+      </radialGradient>
 
       <clipPath id="cardClip">
-        <rect x="48" y="2" width="1150" height="426" rx="38" ry="38" transform="skewX(-6)"/>
+        <rect x="48" y="2" width="1190" height="426" rx="38" ry="38" transform="skewX(-6)"/>
       </clipPath>
     </defs>
 
     <g clip-path="url(#cardClip)">
-      <rect x="0" y="0" width="1200" height="430" fill="url(#bgGrad)"/>
-      <rect x="0" y="0" width="1200" height="430" fill="url(#halftone)"/>
-      <rect x="0" y="0" width="1200" height="430" fill="url(#redGlow)"/>
-      <!-- Диагональный блик -->
-      <polygon points="620,0 780,0 710,430 550,430" fill="rgba(255,255,255,0.025)"/>
+      <rect x="0" y="0" width="1240" height="430" fill="url(#bgGrad)"/>
+
+      <g fill="rgba(163, 240, 72, 0.055)">
+        <path d="M880,40 C950,10 1030,50 1010,115 C990,180 900,170 860,120 C820,70 830,60 880,40 Z"/>
+        <path d="M1080,190 C1160,150 1220,220 1190,295 C1160,370 1050,360 1030,290 C1010,220 1030,215 1080,190 Z"/>
+        <path d="M720,290 C780,260 850,305 825,365 C800,425 690,410 675,355 C660,300 680,310 720,290 Z"/>
+        <path d="M140,-20 C210,-10 245,55 190,105 C135,155 60,115 55,55 C50,-5 90,-25 140,-20 Z"/>
+      </g>
+      <g fill="rgba(45, 200, 175, 0.065)">
+        <path d="M1000,-10 C1090,-20 1150,45 1115,115 C1080,185 975,165 960,100 C945,35 950,0 1000,-10 Z"/>
+        <path d="M510,20 C585,5 625,75 580,130 C535,185 450,150 450,90 C450,30 465,30 510,20 Z"/>
+      </g>
+
+      <rect x="0" y="0" width="1240" height="430" fill="url(#slimeGlow)"/>
+      <rect x="0" y="0" width="1240" height="430" fill="url(#pinkGlow)"/>
+
+      <polygon points="640,0 800,0 730,430 570,430" fill="rgba(255,255,255,0.025)"/>
     </g>
 
-    <rect x="48" y="2" width="1150" height="426" rx="38" ry="38"
+    <rect x="48" y="2" width="1190" height="426" rx="38" ry="38"
           transform="skewX(-6)"
           fill="none" stroke="url(#borderGrad)" stroke-width="2.5"/>
   </svg>
@@ -326,20 +391,21 @@
       <div class="top-row">
         <div class="badge"><span class="live-dot"></span>TG • НОВОСТНИК</div>
         <div class="stamp-tag">42 КМ</div>
+        <div class="news-pill">NEWS</div>
       </div>
 
       <div class="slide-container">
         <div class="slide active">
           <div class="title">ПОДСЛУШАННО <span>42</span></div>
-          <div class="subtitle">Самое НИШЕВОЕ СМИ в 42км</div>
+          <div class="subtitle">Самое <b>НИШЕВОЕ СМИ</b> в 42км</div>
         </div>
         <div class="slide">
           <div class="title">ГЛАВНЫЙ <span>НОВОСТНИК</span></div>
-          <div class="subtitle">Инсайды, события и сводки без воды</div>
+          <div class="subtitle">Инсайды, события и сводки <b>без воды</b></div>
         </div>
         <div class="slide">
           <div class="title">СКАНИРУЙ <span>QR</span></div>
-          <div class="subtitle">Подписывайся и будь в курсе 42км</div>
+          <div class="subtitle">Подписывайся и будь в курсе <b>42км</b></div>
         </div>
       </div>
 
@@ -350,6 +416,8 @@
       </div>
     </div>
 
+    <div class="divider"></div>
+
     <div class="qr-wrapper">
       <div class="qr-glow"></div>
       <div class="qr-card">
@@ -358,13 +426,12 @@
           <span class="corner tr"></span>
           <span class="corner bl"></span>
           <span class="corner br"></span>
-          <img src="qr-code.jpg" alt="QR Code">
+          <img src="qr-code.jpg" alt="">
         </div>
         <div class="qr-face qr-back">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/>
           </svg>
-          <span>СМИ • 42 КМ</span>
         </div>
       </div>
     </div>
