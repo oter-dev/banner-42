@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background: transparent;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    overflow: hidden;
+  }
+
+  /* Основной скошенный корпус в стиле постера */
+  .banner {
+    width: 610px;
+    height: 216px;
+    position: relative;
+    transform: skewX(-6deg);
+    border-radius: 22px;
+    background: linear-gradient(110deg, #070709 42%, #19070a 78%, #360b10 100%);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow:
+      0 20px 45px rgba(0, 0, 0, 0.65),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15),
+      inset -40px 0 70px rgba(255, 42, 42, 0.12);
+    overflow: hidden;
+  }
+
+  /* Атмосферное красное свечение за QR-кодом (как подсветка на референсе) */
+  .banner::before {
+    content: "";
+    position: absolute;
+    right: -30px;
+    top: -40px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255, 46, 36, 0.32) 0%, rgba(255, 46, 36, 0) 70%);
+    pointer-events: none;
+  }
+
+  /* Лёгкая зернистость/шум для глубины фона */
+  .noise {
+    position: absolute;
+    inset: 0;
+    opacity: 0.045;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Тонкая диагональная световая полоса */
+  .shine {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 56%;
+    width: 110px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.03), transparent);
+    pointer-events: none;
+  }
+
+  /* Внутренний контейнер компенсирует наклон, чтобы текст и QR были ровными */
+  .banner-inner {
+    width: 100%;
+    height: 100%;
+    transform: skewX(6deg);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 38px 24px 40px;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Левая часть с текстом */
+  .text-zone {
+    flex: 1;
+    padding-right: 26px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+  }
+
+  .top-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  /* Штамп-бейдж в стиле афиши */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: #ffffff;
+    background: rgba(255, 46, 36, 0.16);
+    border: 1px solid rgba(255, 59, 48, 0.45);
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+
+  .live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #ff3b30;
+    box-shadow: 0 0 8px #ff3b30;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.45; transform: scale(0.8); }
+  }
+
+  .stamp-tag {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.72);
+    border: 1px dashed rgba(255, 255, 255, 0.28);
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+
+  .slide-container {
+    position: relative;
+    height: 92px;
+  }
+
+  .slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+                transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .slide.active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .title {
+    font-size: 29px;
+    font-weight: 900;
+    color: #ffffff;
+    line-height: 1.08;
+    letter-spacing: -0.6px;
+    text-transform: uppercase;
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.5);
+  }
+
+  .title span {
+    color: #ff3326;
+    text-shadow: 0 0 22px rgba(255, 51, 38, 0.45);
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: #a1a1aa;
+    margin-top: 8px;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
+  /* Индикатор переключения слайдов */
+  .progress-dots {
+    display: flex;
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  .dot {
+    width: 16px;
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.16);
+    transition: all 0.35s ease;
+  }
+
+  .dot.active {
+    width: 28px;
+    background: #ff3326;
+    box-shadow: 0 0 10px rgba(255, 51, 38, 0.6);
+  }
+
+  /* Правая часть с 3D-карточкой QR */
+  .qr-wrapper {
+    width: 152px;
+    height: 152px;
+    perspective: 900px;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  /* Красный ореол за QR */
+  .qr-glow {
+    position: absolute;
+    inset: -10px;
+    border-radius: 24px;
+    background: radial-gradient(circle, rgba(255, 51, 38, 0.28) 0%, transparent 72%);
+    filter: blur(8px);
+    pointer-events: none;
+  }
+
+  .qr-card {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    animation: spinPause 7.5s cubic-bezier(0.45, 0.05, 0.2, 1) infinite;
+  }
+
+  .qr-face {
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    overflow: hidden;
+  }
+
+  /* Лицевая сторона с QR */
+  .qr-front {
+    background: #ffffff;
+    padding: 9px;
+    box-shadow:
+      0 12px 28px rgba(0, 0, 0, 0.55),
+      0 0 0 1px rgba(255, 255, 255, 0.25);
+  }
+
+  .qr-front img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 9px;
+    display: block;
+  }
+
+  /* Уголки-прицелы на QR для акцента */
+  .corner {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border: 2.5px solid #ff3326;
+    pointer-events: none;
+  }
+  .corner.tl { top: 5px; left: 5px; border-right: 0; border-bottom: 0; border-top-left-radius: 6px; }
+  .corner.tr { top: 5px; right: 5px; border-left: 0; border-bottom: 0; border-top-right-radius: 6px; }
+  .corner.bl { bottom: 5px; left: 5px; border-right: 0; border-top: 0; border-bottom-left-radius: 6px; }
+  .corner.br { bottom: 5px; right: 5px; border-left: 0; border-top: 0; border-bottom-right-radius: 6px; }
+
+  /* Обратная сторона карточки (чтобы при развороте выглядело дорого) */
+  .qr-back {
+    transform: rotateY(180deg);
+    background: linear-gradient(145deg, #16161a 0%, #2d090e 100%);
+    border: 1.5px solid rgba(255, 51, 38, 0.55);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6);
+  }
+
+  .qr-back svg {
+    width: 44px;
+    height: 44px;
+    fill: #ffffff;
+    filter: drop-shadow(0 0 12px rgba(255, 51, 38, 0.5));
+  }
+
+  .qr-back span {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    color: #ff3326;
+    text-transform: uppercase;
+  }
+
+  @keyframes spinPause {
+    0%, 58% {
+      transform: rotateY(0deg);
+    }
+    86%, 100% {
+      transform: rotateY(360deg);
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="banner">
+  <div class="noise"></div>
+  <div class="shine"></div>
+
+  <div class="banner-inner">
+    <div class="text-zone">
+      <div class="top-row">
+        <div class="badge"><span class="live-dot"></span>TELEGRAM • ЧАТ</div>
+        <div class="stamp-tag">42 COMMUNITY</div>
+      </div>
+
+      <div class="slide-container">
+        <div class="slide active">
+          <div class="title">ПОДСЛУШАННО <span>42</span></div>
+          <div class="subtitle">Все сливы, новости и движ канала</div>
+        </div>
+        <div class="slide">
+          <div class="title">СКАНИРУЙ <span>QR</span></div>
+          <div class="subtitle">Наведи камеру и залетай в комьюнити</div>
+        </div>
+        <div class="slide">
+          <div class="title">БУДЬ В <span>ТЕМЕ</span></div>
+          <div class="subtitle">Анонсы стримов и общение без фильтров</div>
+        </div>
+      </div>
+
+      <div class="progress-dots">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+    </div>
+
+    <div class="qr-wrapper">
+      <div class="qr-glow"></div>
+      <div class="qr-card">
+        <div class="qr-face qr-front">
+          <span class="corner tl"></span>
+          <span class="corner tr"></span>
+          <span class="corner bl"></span>
+          <span class="corner br"></span>
+          <img src="qr-code.jpg" alt="QR Code">
+        </div>
+        <div class="qr-face qr-back">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/>
+          </svg>
+          <span>JOIN TG</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const dots = document.querySelectorAll('.dot');
+  let current = 0;
+
+  setInterval(() => {
+    slides[current].classList.remove('active');
+    dots[current].classList.remove('active');
+    current = (current + 1) % slides.length;
+    slides[current].classList.add('active');
+    dots[current].classList.add('active');
+  }, 3500);
+</script>
+
+</body>
+</html>
