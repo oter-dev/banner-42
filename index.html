@@ -24,63 +24,30 @@
     overflow: hidden;
   }
 
-  /* Увеличенный скошенный корпус для высокого качества в OBS */
+  /* Контейнер без transform: skewX — текст и QR рендерятся попиксельно резко */
   .banner {
-    width: 920px;
-    height: 330px;
+    width: 1200px;
+    height: 430px;
     position: relative;
-    transform: skewX(-6deg);
-    border-radius: 32px;
-    background: linear-gradient(110deg, #070709 42%, #19070a 78%, #360b10 100%);
-    border: 1.5px solid rgba(255, 255, 255, 0.14);
-    box-shadow:
-      0 26px 60px rgba(0, 0, 0, 0.7),
-      inset 0 1.5px 0 rgba(255, 255, 255, 0.16),
-      inset -60px 0 100px rgba(255, 42, 42, 0.13);
-    overflow: hidden;
   }
 
-  /* Красное свечение за QR-кодом */
-  .banner::before {
-    content: "";
-    position: absolute;
-    right: -45px;
-    top: -60px;
-    width: 450px;
-    height: 450px;
-    background: radial-gradient(circle, rgba(255, 46, 36, 0.34) 0%, rgba(255, 46, 36, 0) 70%);
-    pointer-events: none;
-  }
-
-  /* Лёгкая зернистость фона */
-  .noise {
+  /* Векторный скошенный фон + тень только на подложке */
+  .banner-bg {
     position: absolute;
     inset: 0;
-    opacity: 0.045;
-    pointer-events: none;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
-
-  /* Диагональный световой блик */
-  .shine {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 56%;
-    width: 165px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.03), transparent);
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 24px 38px rgba(0, 0, 0, 0.72));
     pointer-events: none;
   }
 
-  /* Компенсация наклона для ровного контента */
   .banner-inner {
     width: 100%;
     height: 100%;
-    transform: skewX(6deg);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 32px 54px 32px 58px;
+    padding: 40px 84px 40px 92px;
     position: relative;
     z-index: 2;
   }
@@ -88,7 +55,7 @@
   /* Левая часть с текстом */
   .text-zone {
     flex: 1;
-    padding-right: 36px;
+    padding-right: 48px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -98,31 +65,31 @@
   .top-row {
     display: flex;
     align-items: center;
-    gap: 14px;
-    margin-bottom: 18px;
+    gap: 16px;
+    margin-bottom: 24px;
   }
 
   .badge {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
-    font-size: 14px;
+    gap: 11px;
+    font-size: 17px;
     font-weight: 800;
-    letter-spacing: 1.8px;
+    letter-spacing: 2px;
     text-transform: uppercase;
     color: #ffffff;
     background: rgba(255, 46, 36, 0.16);
-    border: 1.5px solid rgba(255, 59, 48, 0.45);
-    padding: 6px 14px;
-    border-radius: 8px;
+    border: 2px solid rgba(255, 59, 48, 0.5);
+    padding: 8px 18px;
+    border-radius: 10px;
   }
 
   .live-dot {
-    width: 9px;
-    height: 9px;
+    width: 11px;
+    height: 11px;
     border-radius: 50%;
     background: #ff3b30;
-    box-shadow: 0 0 12px #ff3b30;
+    box-shadow: 0 0 14px #ff3b30;
     animation: pulse 2s ease-in-out infinite;
   }
 
@@ -132,19 +99,19 @@
   }
 
   .stamp-tag {
-    font-size: 14px;
+    font-size: 17px;
     font-weight: 800;
-    letter-spacing: 1.4px;
+    letter-spacing: 1.6px;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.8);
-    border: 1.5px dashed rgba(255, 255, 255, 0.3);
-    padding: 6px 12px;
-    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.85);
+    border: 2px dashed rgba(255, 255, 255, 0.32);
+    padding: 8px 16px;
+    border-radius: 8px;
   }
 
   .slide-container {
     position: relative;
-    height: 156px;
+    height: 192px;
   }
 
   .slide {
@@ -153,35 +120,35 @@
     left: 0;
     width: 100%;
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(16px);
     transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
                 transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .slide.active {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 
   .title {
-    font-size: 44px;
+    font-size: 56px;
     font-weight: 900;
     color: #ffffff;
     line-height: 1.06;
-    letter-spacing: -0.8px;
+    letter-spacing: -1px;
     text-transform: uppercase;
-    text-shadow: 0 3px 20px rgba(0, 0, 0, 0.55);
+    text-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
   }
 
   .title span {
     color: #ff3326;
-    text-shadow: 0 0 30px rgba(255, 51, 38, 0.45);
+    text-shadow: 0 0 36px rgba(255, 51, 38, 0.48);
   }
 
   .subtitle {
-    font-size: 20px;
-    color: #bdbdc7;
-    margin-top: 12px;
+    font-size: 25px;
+    color: #c4c4ce;
+    margin-top: 14px;
     font-weight: 600;
     line-height: 1.32;
   }
@@ -189,39 +156,39 @@
   /* Индикатор слайдов */
   .progress-dots {
     display: flex;
-    gap: 9px;
-    margin-top: 16px;
+    gap: 12px;
+    margin-top: 20px;
   }
 
   .dot {
-    width: 24px;
-    height: 4px;
+    width: 32px;
+    height: 5px;
     border-radius: 3px;
-    background: rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.18);
     transition: all 0.35s ease;
   }
 
   .dot.active {
-    width: 44px;
+    width: 58px;
     background: #ff3326;
-    box-shadow: 0 0 14px rgba(255, 51, 38, 0.65);
+    box-shadow: 0 0 16px rgba(255, 51, 38, 0.7);
   }
 
   /* Правая часть с 3D-карточкой QR */
   .qr-wrapper {
-    width: 232px;
-    height: 232px;
-    perspective: 1200px;
+    width: 300px;
+    height: 300px;
+    perspective: 1400px;
     flex-shrink: 0;
     position: relative;
   }
 
   .qr-glow {
     position: absolute;
-    inset: -16px;
-    border-radius: 34px;
-    background: radial-gradient(circle, rgba(255, 51, 38, 0.3) 0%, transparent 72%);
-    filter: blur(12px);
+    inset: -22px;
+    border-radius: 42px;
+    background: radial-gradient(circle, rgba(255, 51, 38, 0.32) 0%, transparent 72%);
+    filter: blur(16px);
     pointer-events: none;
   }
 
@@ -236,7 +203,7 @@
   .qr-face {
     position: absolute;
     inset: 0;
-    border-radius: 24px;
+    border-radius: 30px;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
     overflow: hidden;
@@ -244,55 +211,56 @@
 
   .qr-front {
     background: #ffffff;
-    padding: 13px;
+    padding: 17px;
     box-shadow:
-      0 18px 40px rgba(0, 0, 0, 0.6),
-      0 0 0 1.5px rgba(255, 255, 255, 0.25);
+      0 22px 48px rgba(0, 0, 0, 0.62),
+      0 0 0 2px rgba(255, 255, 255, 0.28);
   }
 
   .qr-front img {
     width: 100%;
     height: 100%;
     object-fit: contain;
-    border-radius: 13px;
+    border-radius: 16px;
     display: block;
+    image-rendering: -webkit-optimize-contrast;
   }
 
   .corner {
     position: absolute;
-    width: 18px;
-    height: 18px;
-    border: 3.5px solid #ff3326;
+    width: 24px;
+    height: 24px;
+    border: 4.5px solid #ff3326;
     pointer-events: none;
   }
-  .corner.tl { top: 7px; left: 7px; border-right: 0; border-bottom: 0; border-top-left-radius: 9px; }
-  .corner.tr { top: 7px; right: 7px; border-left: 0; border-bottom: 0; border-top-right-radius: 9px; }
-  .corner.bl { bottom: 7px; left: 7px; border-right: 0; border-top: 0; border-bottom-left-radius: 9px; }
-  .corner.br { bottom: 7px; right: 7px; border-left: 0; border-top: 0; border-bottom-right-radius: 9px; }
+  .corner.tl { top: 9px; left: 9px; border-right: 0; border-bottom: 0; border-top-left-radius: 11px; }
+  .corner.tr { top: 9px; right: 9px; border-left: 0; border-bottom: 0; border-top-right-radius: 11px; }
+  .corner.bl { bottom: 9px; left: 9px; border-right: 0; border-top: 0; border-bottom-left-radius: 11px; }
+  .corner.br { bottom: 9px; right: 9px; border-left: 0; border-top: 0; border-bottom-right-radius: 11px; }
 
   .qr-back {
     transform: rotateY(180deg);
-    background: linear-gradient(145deg, #16161a 0%, #2d090e 100%);
-    border: 2px solid rgba(255, 51, 38, 0.55);
+    background: linear-gradient(145deg, #16161a 0%, #30090f 100%);
+    border: 2.5px solid rgba(255, 51, 38, 0.6);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.65);
+    gap: 16px;
+    box-shadow: 0 22px 48px rgba(0, 0, 0, 0.68);
   }
 
   .qr-back svg {
-    width: 68px;
-    height: 68px;
+    width: 88px;
+    height: 88px;
     fill: #ffffff;
-    filter: drop-shadow(0 0 18px rgba(255, 51, 38, 0.55));
+    filter: drop-shadow(0 0 22px rgba(255, 51, 38, 0.55));
   }
 
   .qr-back span {
-    font-size: 16px;
+    font-size: 21px;
     font-weight: 800;
-    letter-spacing: 2px;
+    letter-spacing: 2.5px;
     color: #ff3326;
     text-transform: uppercase;
   }
@@ -310,8 +278,48 @@
 <body>
 
 <div class="banner">
-  <div class="noise"></div>
-  <div class="shine"></div>
+  <!-- Чёткая векторная скошенная карточка -->
+  <svg class="banner-bg" viewBox="0 0 1200 430" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="bgGrad" x1="0%" y1="30%" x2="100%" y2="75%">
+        <stop offset="0%" stop-color="#060608"/>
+        <stop offset="46%" stop-color="#0b090b"/>
+        <stop offset="78%" stop-color="#1d070b"/>
+        <stop offset="100%" stop-color="#3c0b12"/>
+      </linearGradient>
+
+      <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="rgba(255,255,255,0.22)"/>
+        <stop offset="60%" stop-color="rgba(255,255,255,0.10)"/>
+        <stop offset="100%" stop-color="rgba(255,51,38,0.45)"/>
+      </linearGradient>
+
+      <radialGradient id="redGlow" cx="84%" cy="46%" r="44%">
+        <stop offset="0%" stop-color="rgba(255,46,36,0.34)"/>
+        <stop offset="100%" stop-color="rgba(255,46,36,0)"/>
+      </radialGradient>
+
+      <pattern id="halftone" width="12" height="12" patternUnits="userSpaceOnUse">
+        <circle cx="2" cy="2" r="1" fill="rgba(255,255,255,0.035)"/>
+      </pattern>
+
+      <clipPath id="cardClip">
+        <rect x="48" y="2" width="1150" height="426" rx="38" ry="38" transform="skewX(-6)"/>
+      </clipPath>
+    </defs>
+
+    <g clip-path="url(#cardClip)">
+      <rect x="0" y="0" width="1200" height="430" fill="url(#bgGrad)"/>
+      <rect x="0" y="0" width="1200" height="430" fill="url(#halftone)"/>
+      <rect x="0" y="0" width="1200" height="430" fill="url(#redGlow)"/>
+      <!-- Диагональный блик -->
+      <polygon points="620,0 780,0 710,430 550,430" fill="rgba(255,255,255,0.025)"/>
+    </g>
+
+    <rect x="48" y="2" width="1150" height="426" rx="38" ry="38"
+          transform="skewX(-6)"
+          fill="none" stroke="url(#borderGrad)" stroke-width="2.5"/>
+  </svg>
 
   <div class="banner-inner">
     <div class="text-zone">
