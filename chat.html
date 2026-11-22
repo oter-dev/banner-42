@@ -11,6 +11,7 @@
     --user-col-width: 175px;   /* Ширина колонки со значками и ником */
     --font-size: 16px;         /* Размер шрифта чата */
     --bg-alpha: 0.68;          /* Затемнение подложки чата (0 — полностью прозрачно) */
+    --bottom-pad: 42px;        /* Нижний отступ от края, чтобы текст не упирался в низ */
   }
 
   * {
@@ -19,35 +20,56 @@
     padding: 0;
   }
 
-  body {
+  html, body {
     background: transparent;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
     overflow: hidden;
     height: 100vh;
     width: 100vw;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
+    position: relative;
   }
 
-  /* Мягкая тёмная подложка слева, плавно уходящая в прозрачность справа */
-  #chat-backdrop {
+  /* Отдельный слой фона: плавно тает сверху, справа И снизу — никаких резких обрезок при подъёме в OBS */
+  #chat-bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      90deg,
+      rgba(6, 7, 10, var(--bg-alpha)) 0%,
+      rgba(6, 7, 10, calc(var(--bg-alpha) * 0.85)) 76%,
+      rgba(6, 7, 10, 0) 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      black 10%,
+      black 88%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      black 10%,
+      black 88%,
+      transparent 100%
+    );
+  }
+
+  /* Контейнер сообщений: растворяются только старые сообщения сверху, а нижнее всегда на 100% чёткое */
+  #chat-viewport {
+    position: relative;
+    z-index: 2;
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    padding: 16px 22px 16px 10px;
-    background: linear-gradient(
-      90deg,
-      rgba(6, 7, 10, var(--bg-alpha)) 0%,
-      rgba(6, 7, 10, calc(var(--bg-alpha) * 0.85)) 78%,
-      rgba(6, 7, 10, 0) 100%
-    );
-    /* Плавное растворение старых сообщений сверху */
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 100%);
-    mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 100%);
+    padding: 24px 22px var(--bottom-pad) 10px;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 9%, black 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 9%, black 100%);
   }
 
   #chat-container {
@@ -62,6 +84,7 @@
     align-items: flex-start;
     gap: 10px;
     width: 100%;
+    padding-bottom: 2px;
     animation: msgIn 0.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     transition: opacity 0.35s ease, transform 0.35s ease;
   }
@@ -71,7 +94,7 @@
     transform: translateY(-6px);
   }
 
-  /* Левая колонка: значки + ник (выровнено к правому краю колонки) */
+  /* Левая колонка: значки + ник */
   .user-col {
     width: var(--user-col-width);
     flex-shrink: 0;
@@ -120,7 +143,7 @@
     color: #ffffff;
     font-weight: 700;
     font-size: var(--font-size);
-    line-height: 1.35;
+    line-height: 1.38;
     word-wrap: break-word;
     overflow-wrap: anywhere;
     text-shadow:
@@ -137,7 +160,7 @@
     height: 26px;
     width: auto;
     vertical-align: middle;
-    margin: -5px 2px;
+    margin: -4px 2px;
     display: inline-block;
   }
 
@@ -155,20 +178,20 @@
 </head>
 <body>
 
-<div id="chat-backdrop">
+<div id="chat-bg"></div>
+<div id="chat-viewport">
   <div id="chat-container"></div>
 </div>
 
 <script>
   const CHANNEL = "denmiten36";
   const MAX_MESSAGES = 35;
-  const MESSAGE_LIFETIME_MS = 0; // 0 = сообщения не исчезают сами, а уходят вверх (как на скрине). Поставь 30000, если нужно исчезновение через 30 сек.
+  const MESSAGE_LIFETIME_MS = 0; // 0 = сообщения не исчезают сами, а уходят вверх. Поставь 30000 для автоскрытия через 30 сек.
 
   const chatContainer = document.getElementById("chat-container");
   const thirdPartyEmotes = new Map();
   const twitchBadges = new Map();
 
-  // Резервные SVG-иконки в стиле официальных значков Twitch (на случай если API бейджей не ответит)
   const FALLBACK_BADGES = {
     broadcaster: `<svg class="badge-icon" viewBox="0 0 18 18"><rect width="18" height="18" rx="3" fill="#e91916"/><path fill="#fff" d="M3.5 5.5h7a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1zm8.5 2.2 3-2v6.6l-3-2V7.7z"/></svg>`,
     moderator: `<svg class="badge-icon" viewBox="0 0 18 18"><rect width="18" height="18" rx="3" fill="#00ad03"/><path fill="#fff" d="M14.2 3.8 11.4 4l-4.9 4.9-1.3-1.3-1.1 1.1 1.8 1.8-2.1 2.1 1.4 1.4 2.1-2.1 1.8 1.8 1.1-1.1-1.3-1.3 4.9-4.9.2-2.6z"/></svg>`,
@@ -183,7 +206,6 @@
     "bot-badge": `<svg class="badge-icon" viewBox="0 0 18 18"><rect width="18" height="18" rx="3" fill="#53535f"/><path fill="#fff" d="M5 6.5h8a1.5 1.5 0 0 1 1.5 1.5v4A1.5 1.5 0 0 1 13 13.5H5A1.5 1.5 0 0 1 3.5 12V8A1.5 1.5 0 0 1 5 6.5zm2 2.2a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm4 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/></svg>`
   };
 
-  // Загрузка реальных значков Twitch (глобальные + кастомные значки канала)
   async function loadTwitchBadges() {
     const endpoints = [
       "https://api.ivr.fi/v2/twitch/badges/global",
@@ -212,7 +234,6 @@
     }
   }
 
-  // Загрузка глобальных эмоутов (7TV + BTTV + FFZ)
   async function loadGlobalEmotes() {
     await Promise.allSettled([
       fetch("https://7tv.io/v3/emote-sets/global")
@@ -244,7 +265,6 @@
     ]);
   }
 
-  // Загрузка канальных эмоутов (7TV + BTTV + FFZ) по Room ID
   async function loadChannelEmotes(roomId) {
     if (!roomId) return;
     await Promise.allSettled([
@@ -282,7 +302,6 @@
     return div.innerHTML;
   }
 
-  // Осветляем слишком тёмные ники, чтобы они не пропадали на тёмном фоне
   function ensureReadableColor(hex) {
     if (!hex || !/^#[0-9a-f]{6}$/i.test(hex)) return "#ff7eb6";
     let r = parseInt(hex.slice(1, 3), 16);
@@ -446,7 +465,6 @@
           continue;
         }
 
-        // Удаление конкретного сообщения модератором
         if (rest.includes(" CLEARMSG ")) {
           const targetId = tags["target-msg-id"];
           if (targetId) {
@@ -455,7 +473,6 @@
           continue;
         }
 
-        // Удаление всех сообщений пользователя при бане/таймауте
         if (rest.includes(" CLEARCHAT ")) {
           const targetUserId = tags["target-user-id"];
           if (targetUserId) {
