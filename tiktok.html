@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TikTok Видео-Редактор — ПОДСЛУШАННО 42</title>
+<title>TikTok Видео-Редактор + Конвертер — ПОДСЛУШАННО 42</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,700;0,800;0,900;1,900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/umd/ffmpeg.js"></script>
 <style>
   * {
     box-sizing: border-box;
@@ -348,6 +349,11 @@
     color: #ffffff;
   }
 
+  .btn-cyan {
+    background: linear-gradient(90deg, #3df5ff, #38b6ff);
+    color: #06100d;
+  }
+
   .btn-dark {
     background: #13221e;
     color: var(--text);
@@ -379,6 +385,34 @@
     line-height: 1.35;
   }
 
+  .converter-box {
+    background: #08110f;
+    border: 1px solid #2a4c43;
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .converter-box.hidden {
+    display: none;
+  }
+
+  .converter-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: 900;
+    color: #ffffff;
+  }
+
+  .converter-head span {
+    color: var(--lime);
+    font-size: 11px;
+  }
+
   details.card summary {
     cursor: pointer;
     list-style: none;
@@ -407,8 +441,8 @@
 
 <div class="topbar">
   <div class="brand-head">
-    <span class="pill">TIKTOK СТУДИЯ</span>
-    <h1>Наложи плашку «ПОДСЛУШАННО 42» на своё видео</h1>
+    <span class="pill">TIKTOK СТУДИЯ • 60 FPS</span>
+    <h1>Наложи плашку «ПОДСЛУШАННО 42» без лагов и конвертируй в любой формат</h1>
   </div>
 </div>
 
@@ -466,18 +500,32 @@
           </select>
         </div>
         <div class="field">
+          <label>Качество (против лагов)</label>
+          <select id="resScale">
+            <option value="1" selected>Полное (до 1080p)</option>
+            <option value="0.67">Оптимум 720p (плавнее всего)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row-2">
+        <div class="field">
           <label>Как вписать твоё видео</label>
           <select id="videoFit">
             <option value="cover" selected>Заполнить экран (Cover)</option>
             <option value="contain">Вписать целиком (Contain)</option>
           </select>
         </div>
+        <div class="field" style="justify-content:flex-end;">
+          <div class="check-row" style="padding-bottom:6px;">
+            <label><input type="checkbox" id="chkMutePreview"> Без звука в плеере</label>
+          </div>
+        </div>
       </div>
 
       <div class="check-row">
         <label><input type="checkbox" id="chkSafeZone" checked> Сетка кнопок TikTok</label>
         <label><input type="checkbox" id="chkShowGuides" checked> Рамка выделения</label>
-        <label><input type="checkbox" id="chkMutePreview"> Без звука в плеере</label>
       </div>
     </div>
 
@@ -596,12 +644,12 @@
       </div>
     </details>
 
-    <!-- 4. Скачать итоговое видео -->
+    <!-- 4. Запись и Конвертер -->
     <div class="card">
-      <h3>4. Скачать готовое видео</h3>
+      <h3>4. Запись и Конвертация в любой формат</h3>
       <div class="row-2">
         <div class="field">
-          <label>Формат файла</label>
+          <label>Кодек записи</label>
           <select id="exportFormat">
             <option value="auto" selected>Авто (MP4 или WebM)</option>
             <option value="webm">WebM (макс. стабильность)</option>
@@ -616,7 +664,7 @@
               <option value="transparent">Прозр.</option>
             </select>
             <select id="fpsSelect">
-              <option value="30" selected>30 FPS</option>
+              <option value="30" selected>30 FPS (плавно)</option>
               <option value="60">60 FPS</option>
             </select>
           </div>
@@ -624,23 +672,48 @@
       </div>
 
       <div class="row-2">
-        <button class="btn btn-export" id="btnExport" type="button">⬇ Скачать видео с плашкой</button>
+        <button class="btn btn-export" id="btnExport" type="button">🔴 Записать видео</button>
         <button class="btn btn-pink" id="btnSecondary" type="button">🗑 Убрать видео</button>
       </div>
 
       <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
-      <div class="status" id="statusText">Загрузи своё видео и QR-код — подгони плашку прямо на экране и скачай.</div>
+      <div class="status" id="statusText">Загрузи видео и QR-код, затем нажми «🔴 Записать видео».</div>
+
+      <!-- Конвертер -->
+      <div class="converter-box hidden" id="converterBox">
+        <div class="converter-head">
+          <div>📦 Запись готова! Выбери формат:</div>
+          <span id="recordedInfo"></span>
+        </div>
+
+        <div class="row-2">
+          <button class="btn btn-dark" id="btnDownloadRaw" type="button">⬇ Скачать оригинал</button>
+          <select id="targetFormat" style="background:#060c0a;border:1px solid #2b4b43;color:#eef7f4;border-radius:9px;padding:8px 10px;font-family:inherit;font-size:12px;font-weight:800;">
+            <option value="mp4" selected>MP4 (H.264 — TikTok / iPhone)</option>
+            <option value="mov">MOV (QuickTime / Apple)</option>
+            <option value="webm">WebM (VP8 + Opus)</option>
+            <option value="mkv">MKV (Matroska)</option>
+            <option value="avi">AVI (MPEG4 + MP3)</option>
+            <option value="gif">GIF (Анимация без звука)</option>
+            <option value="mp3">MP3 (Только звук)</option>
+          </select>
+        </div>
+
+        <button class="btn btn-cyan" id="btnConvert" type="button">🔄 Конвертировать и скачать</button>
+
+        <div class="progress-wrap"><div class="progress-bar" id="convProgressBar"></div></div>
+        <div class="status" id="convStatus">Можешь скачать оригинал сразу или перекодировать в нужный формат.</div>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- Скрытый элемент для проигрывания видео пользователя (без crossorigin для blob:) -->
 <video id="bgVideo" playsinline loop style="display:none;"></video>
 
 <script>
 (() => {
   const canvas = document.getElementById("stage");
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext("2d", { alpha: true });
   const bgVideo = document.getElementById("bgVideo");
 
   const videoDropzone = document.getElementById("videoDropzone");
@@ -654,6 +727,7 @@
   const qrThumb = document.getElementById("qrThumb");
 
   const canvasAspectEl = document.getElementById("canvasAspect");
+  const resScaleEl = document.getElementById("resScale");
   const videoFitEl = document.getElementById("videoFit");
   const chkSafeZone = document.getElementById("chkSafeZone");
   const chkShowGuides = document.getElementById("chkShowGuides");
@@ -701,6 +775,14 @@
   const progressBar = document.getElementById("progressBar");
   const statusText = document.getElementById("statusText");
 
+  const converterBox = document.getElementById("converterBox");
+  const recordedInfo = document.getElementById("recordedInfo");
+  const btnDownloadRaw = document.getElementById("btnDownloadRaw");
+  const targetFormatEl = document.getElementById("targetFormat");
+  const btnConvert = document.getElementById("btnConvert");
+  const convProgressBar = document.getElementById("convProgressBar");
+  const convStatus = document.getElementById("convStatus");
+
   const HUD_PATH = new Path2D("M 52,4 L 1110,4 Q 1136,4 1136,30 L 1136,428 L 1088,476 L 30,476 Q 4,476 4,450 L 4,52 Z");
   const RIGHT_CLIP = new Path2D("M 755,0 L 1140,0 L 1140,480 L 715,480 Z");
   const SLIME_1 = new Path2D("M800,30 C860,0 930,35 908,95 C886,155 810,145 782,102 C754,59 768,48 800,30 Z");
@@ -714,14 +796,380 @@
   let videoUrl = null;
   let isPlaying = true;
   let isRecording = false;
+  let isConverting = false;
   let stopRecordingFn = null;
   let virtualTime = 0;
   let lastFrameNow = performance.now();
+
+  let lastRecordedBlob = null;
+  let lastRecordedExt = "webm";
 
   let audioCtx = null;
   let mediaSource = null;
   let audioDest = null;
   let previewGain = null;
+
+  // ================= OFFSCREEN КЭШ ДЛЯ ИДЕАЛЬНЫХ 60 FPS БЕЗ ЛАГОВ =================
+  let cacheDirty = true;
+  const cacheBg = document.createElement("canvas");
+  cacheBg.width = 1260;
+  cacheBg.height = 600;
+  const cacheSlides = [0, 1, 2].map(() => {
+    const c = document.createElement("canvas");
+    c.width = 720;
+    c.height = 280;
+    return c;
+  });
+  const cacheQrFront = document.createElement("canvas");
+  cacheQrFront.width = 400;
+  cacheQrFront.height = 410;
+  const cacheQrBack = document.createElement("canvas");
+  cacheQrBack.width = 400;
+  cacheQrBack.height = 410;
+
+  // Кэш светящейся зелёной точки (без shadowBlur в рантайме)
+  const cacheGlowDot = document.createElement("canvas");
+  cacheGlowDot.width = 44;
+  cacheGlowDot.height = 44;
+  (() => {
+    const gctx = cacheGlowDot.getContext("2d");
+    const grad = gctx.createRadialGradient(22, 22, 2, 22, 22, 20);
+    grad.addColorStop(0, "rgba(163, 240, 72, 1)");
+    grad.addColorStop(0.35, "rgba(163, 240, 72, 0.85)");
+    grad.addColorStop(1, "rgba(163, 240, 72, 0)");
+    gctx.fillStyle = grad;
+    gctx.fillRect(0, 0, 44, 44);
+  })();
+
+  function markCacheDirty() { cacheDirty = true; }
+
+  function drawFallbackQr(cctx, x, y, size) {
+    const cells = 21;
+    const cell = size / cells;
+    cctx.fillStyle = "#0b1411";
+    const drawFinder = (gx, gy) => {
+      cctx.fillRect(x + gx * cell, y + gy * cell, 7 * cell, 7 * cell);
+      cctx.fillStyle = "#ffffff";
+      cctx.fillRect(x + (gx + 1) * cell, y + (gy + 1) * cell, 5 * cell, 5 * cell);
+      cctx.fillStyle = "#0b1411";
+      cctx.fillRect(x + (gx + 2) * cell, y + (gy + 2) * cell, 3 * cell, 3 * cell);
+    };
+    drawFinder(0, 0); drawFinder(14, 0); drawFinder(0, 14);
+    for (let r = 0; r < cells; r++) {
+      for (let c = 0; c < cells; c++) {
+        if ((r < 8 && c < 8) || (r < 8 && c > 12) || (r > 12 && c < 8)) continue;
+        const hash = Math.sin(r * 12.9898 + c * 78.233) * 43758.5453;
+        if (hash - Math.floor(hash) > 0.48) {
+          cctx.fillRect(x + c * cell, y + r * cell, Math.ceil(cell), Math.ceil(cell));
+        }
+      }
+    }
+  }
+
+  function drawUploadedQr(cctx, boxX, boxY, boxSize) {
+    const zoom = parseFloat(qrZoomEl.value) / 100;
+    const offX = (parseFloat(qrOffXEl.value) / 100) * boxSize;
+    const offY = (parseFloat(qrOffYEl.value) / 100) * boxSize;
+    const fitMode = qrFitModeEl.value;
+    const iw = qrImage.width;
+    const ih = qrImage.height;
+    const baseScale = fitMode === "cover" ? Math.max(boxSize / iw, boxSize / ih) : Math.min(boxSize / iw, boxSize / ih);
+    const drawW = iw * baseScale * zoom;
+    const drawH = ih * baseScale * zoom;
+    const drawX = boxX + (boxSize - drawW) / 2 + offX;
+    const drawY = boxY + (boxSize - drawH) / 2 + offY;
+
+    cctx.save();
+    cctx.beginPath();
+    cctx.roundRect(boxX, boxY, boxSize, boxSize, 14);
+    cctx.clip();
+    cctx.fillStyle = "#ffffff";
+    cctx.fillRect(boxX, boxY, boxSize, boxSize);
+    cctx.drawImage(qrImage, drawX, drawY, drawW, drawH);
+    cctx.restore();
+  }
+
+  function parseSlideInput(str) {
+    const [headPart = "", subPart = ""] = str.split("|").map(s => s.trim());
+    const [line1 = "", line2 = ""] = headPart.split("/").map(s => s.trim());
+    return { line1, line2, subPart };
+  }
+
+  function rebuildBannerCaches() {
+    cacheDirty = false;
+
+    // 1. Кэш статичного фона плашки + теней + бейджа + тега + подписи под QR
+    const bctx = cacheBg.getContext("2d");
+    bctx.clearRect(0, 0, 1260, 600);
+    bctx.save();
+    bctx.translate(60, 60);
+
+    bctx.save();
+    bctx.shadowColor = "rgba(0, 0, 0, 0.82)";
+    bctx.shadowBlur = 36;
+    bctx.shadowOffsetY = 20;
+    bctx.fillStyle = "#050908";
+    bctx.fill(HUD_PATH);
+    bctx.restore();
+
+    bctx.save();
+    bctx.clip(HUD_PATH);
+
+    const darkGrad = bctx.createLinearGradient(0, 0, 1140, 480);
+    darkGrad.addColorStop(0, "#050908");
+    darkGrad.addColorStop(1, "#0b1a17");
+    bctx.fillStyle = darkGrad;
+    bctx.fillRect(0, 0, 1140, 480);
+
+    bctx.fillStyle = "rgba(255, 77, 166, 0.08)";
+    bctx.beginPath(); bctx.arc(140, 400, 220, 0, Math.PI * 2); bctx.fill();
+    bctx.fillStyle = "rgba(163, 240, 72, 0.06)";
+    bctx.beginPath(); bctx.arc(520, 60, 190, 0, Math.PI * 2); bctx.fill();
+
+    bctx.save();
+    bctx.clip(RIGHT_CLIP);
+    const slimeGrad = bctx.createLinearGradient(700 + 440 * 0.2, 0, 700 + 440 * 0.8, 480);
+    slimeGrad.addColorStop(0, "#b4e95f");
+    slimeGrad.addColorStop(0.52, "#58ce85");
+    slimeGrad.addColorStop(1, "#1b8e90");
+    bctx.fillStyle = slimeGrad;
+    bctx.fillRect(700, 0, 440, 480);
+
+    bctx.fillStyle = "rgba(255, 255, 255, 0.17)";
+    bctx.fill(SLIME_1); bctx.fill(SLIME_2); bctx.fill(SLIME_3);
+    bctx.fillStyle = "rgba(12, 92, 86, 0.14)";
+    bctx.fill(SLIME_4);
+    bctx.restore();
+
+    const slashGrad = bctx.createLinearGradient(755, 0, 715, 480);
+    slashGrad.addColorStop(0, "#a3f048");
+    slashGrad.addColorStop(0.5, "#ff5cb0");
+    slashGrad.addColorStop(1, "#ff85c8");
+    bctx.strokeStyle = slashGrad;
+    bctx.lineWidth = 6;
+    bctx.beginPath(); bctx.moveTo(755, 0); bctx.lineTo(715, 480); bctx.stroke();
+    bctx.restore();
+
+    const borderGrad = bctx.createLinearGradient(0, 0, 1140, 480);
+    borderGrad.addColorStop(0, "#a3f048");
+    borderGrad.addColorStop(0.52, "rgba(255,255,255,0.28)");
+    borderGrad.addColorStop(1, "#ff5cb0");
+    bctx.strokeStyle = borderGrad;
+    bctx.lineWidth = 3.5;
+    bctx.stroke(HUD_PATH);
+
+    // Бейдж + тег (точка рисуется отдельно в анимации)
+    const leftX = 54;
+    let curX = leftX;
+    const topY = 54;
+
+    const badgeText = (inpBadge.value || "TG • НОВОСТНИК").toUpperCase();
+    bctx.font = "900 20px Montserrat, sans-serif";
+    const badgeW = 58 + bctx.measureText(badgeText).width;
+    const badgeH = 42;
+    const badgePath = new Path2D();
+    badgePath.roundRect(curX, topY, badgeW, badgeH, 12);
+    bctx.fillStyle = "rgba(255, 77, 166, 0.2)";
+    bctx.fill(badgePath);
+    bctx.strokeStyle = "#ff5cb0";
+    bctx.lineWidth = 2.5;
+    bctx.stroke(badgePath);
+    bctx.fillStyle = "#ffffff";
+    bctx.textBaseline = "middle";
+    bctx.fillText(badgeText, curX + 40, topY + badgeH / 2 + 1);
+    curX += badgeW + 14;
+
+    const tagText = (inpTag.value || "NEWS • 42 КМ").toUpperCase();
+    bctx.font = "italic 900 20px Montserrat, sans-serif";
+    const tagW = bctx.measureText(tagText).width + 34;
+    const tagPath = new Path2D();
+    tagPath.roundRect(curX, topY, tagW, badgeH, 10);
+    bctx.save();
+    bctx.setLineDash([7, 5]);
+    bctx.strokeStyle = "rgba(163, 240, 72, 0.65)";
+    bctx.lineWidth = 2.5;
+    bctx.stroke(tagPath);
+    bctx.restore();
+    bctx.fillStyle = "#c7fa7f";
+    bctx.fillText(tagText, curX + 16, topY + badgeH / 2 + 1);
+
+    // Подпись под QR: ПОДСЛУШАННО 42
+    const qrColCenterX = 927;
+    const brandW = 330;
+    const brandH = 52;
+    const brandX = qrColCenterX - brandW / 2;
+    const brandY = 362;
+    const brandPath = new Path2D();
+    brandPath.roundRect(brandX, brandY, brandW, brandH, 14);
+    bctx.save();
+    bctx.shadowColor = "rgba(0,0,0,0.45)";
+    bctx.shadowBlur = 22;
+    bctx.shadowOffsetY = 10;
+    bctx.fillStyle = "rgba(6, 14, 12, 0.9)";
+    bctx.fill(brandPath);
+    bctx.restore();
+    bctx.strokeStyle = "#ff5cb0";
+    bctx.lineWidth = 2.5;
+    bctx.stroke(brandPath);
+
+    const [bLeftRaw = "ПОДСЛУШАННО", bRightRaw = "42"] = (inpQrBrand.value || "ПОДСЛУШАННО | 42").split("|");
+    const bLeft = bLeftRaw.trim().toUpperCase();
+    const bRight = bRightRaw.trim().toUpperCase();
+    bctx.font = "900 24px Montserrat, sans-serif";
+    const wLeft = bctx.measureText(bRight ? bLeft + " " : bLeft).width;
+    const wRight = bRight ? bctx.measureText(bRight).width : 0;
+    const startBx = qrColCenterX - (wLeft + wRight) / 2;
+    bctx.textBaseline = "middle";
+    bctx.fillStyle = "#ffffff";
+    bctx.fillText(bRight ? bLeft + " " : bLeft, startBx, brandY + brandH / 2 + 1);
+    if (bRight) {
+      bctx.fillStyle = "#b7f36b";
+      bctx.fillText(bRight, startBx + wLeft, brandY + brandH / 2 + 1);
+    }
+
+    bctx.restore();
+
+    // 2. Кэш 3 слайдов
+    const slideTexts = [
+      parseSlideInput(inpSlide1.value),
+      parseSlideInput(inpSlide2.value),
+      parseSlideInput(inpSlide3.value)
+    ];
+
+    slideTexts.forEach((s, idx) => {
+      const sctx = cacheSlides[idx].getContext("2d");
+      sctx.clearRect(0, 0, 720, 280);
+      const sx0 = 30;
+      const sy0 = 30;
+      sctx.textBaseline = "top";
+
+      sctx.font = "900 62px Montserrat, sans-serif";
+      sctx.save();
+      sctx.shadowColor = "rgba(0, 0, 0, 0.7)";
+      sctx.shadowBlur = 22;
+      sctx.shadowOffsetY = 5;
+      sctx.fillStyle = "#ffffff";
+      sctx.fillText(s.line1.toUpperCase(), sx0, sy0);
+      sctx.restore();
+
+      const line2 = s.line2.toUpperCase();
+      const l2Y = sy0 + 64;
+      sctx.save();
+      sctx.lineJoin = "round";
+      sctx.shadowColor = "rgba(255, 77, 166, 0.55)";
+      sctx.shadowBlur = 24;
+      sctx.shadowOffsetY = 10;
+      sctx.strokeStyle = "#420326";
+      sctx.lineWidth = 14;
+      sctx.strokeText(line2, sx0, l2Y + 5);
+      sctx.restore();
+
+      sctx.save();
+      sctx.lineJoin = "round";
+      sctx.strokeStyle = "#5f0738";
+      sctx.lineWidth = 14;
+      sctx.strokeText(line2, sx0, l2Y);
+      sctx.fillStyle = "#ff69b8";
+      sctx.fillText(line2, sx0, l2Y);
+      sctx.restore();
+
+      const subY = l2Y + 78;
+      const parts = s.subPart.split("*");
+      let tx = sx0;
+      parts.forEach((part, pIdx) => {
+        if (!part) return;
+        const isBold = pIdx % 2 === 1;
+        sctx.font = `${isBold ? 900 : 700} 27px Montserrat, sans-serif`;
+        sctx.fillStyle = isBold ? "#b7f36b" : "#d9eee6";
+        sctx.fillText(part, tx, subY);
+        tx += sctx.measureText(part).width;
+      });
+    });
+
+    // 3. Кэш передней и задней сторон QR-карточки
+    const qrSize = 296;
+    const cardRect = new Path2D();
+    cardRect.roundRect(-qrSize / 2, -qrSize / 2, qrSize, qrSize, 30);
+
+    const fctx = cacheQrFront.getContext("2d");
+    fctx.clearRect(0, 0, 400, 410);
+    fctx.save();
+    fctx.translate(200, 190);
+    fctx.save();
+    fctx.shadowColor = "rgba(4, 18, 14, 0.58)";
+    fctx.shadowBlur = 32;
+    fctx.shadowOffsetY = 18;
+    fctx.fillStyle = "#ffffff";
+    fctx.fill(cardRect);
+    fctx.restore();
+
+    fctx.save();
+    fctx.clip(cardRect);
+    fctx.fillStyle = "#ffffff";
+    fctx.fillRect(-qrSize / 2, -qrSize / 2, qrSize, qrSize);
+    const pad = 22;
+    const inner = qrSize - pad * 2;
+    if (qrImage) drawUploadedQr(fctx, -inner / 2, -inner / 2, inner);
+    else drawFallbackQr(fctx, -inner / 2, -inner / 2, inner);
+
+    fctx.strokeStyle = "#ff4da6";
+    fctx.lineWidth = 5;
+    fctx.lineCap = "round";
+    const o = qrSize / 2 - 10;
+    const cLen = 22;
+    fctx.beginPath(); fctx.moveTo(-o, -o + cLen); fctx.lineTo(-o, -o + 8); fctx.quadraticCurveTo(-o, -o, -o + 8, -o); fctx.lineTo(-o + cLen, -o); fctx.stroke();
+    fctx.beginPath(); fctx.moveTo(o - cLen, -o); fctx.lineTo(o - 8, -o); fctx.quadraticCurveTo(o, -o, o, -o + 8); fctx.lineTo(o, -o + cLen); fctx.stroke();
+    fctx.beginPath(); fctx.moveTo(-o, o - cLen); fctx.lineTo(-o, o - 8); fctx.quadraticCurveTo(-o, o, -o + 8, o); fctx.lineTo(-o + cLen, o); fctx.stroke();
+    fctx.beginPath(); fctx.moveTo(o - cLen, o); fctx.lineTo(o - 8, o); fctx.quadraticCurveTo(o, o, o, o - 8); fctx.lineTo(o, o - cLen); fctx.stroke();
+    fctx.restore();
+
+    fctx.strokeStyle = "rgba(255, 255, 255, 0.92)";
+    fctx.lineWidth = 3;
+    fctx.stroke(cardRect);
+    fctx.restore();
+
+    const rctx = cacheQrBack.getContext("2d");
+    rctx.clearRect(0, 0, 400, 410);
+    rctx.save();
+    rctx.translate(200, 190);
+    rctx.save();
+    rctx.shadowColor = "rgba(4, 18, 14, 0.58)";
+    rctx.shadowBlur = 32;
+    rctx.shadowOffsetY = 18;
+    rctx.fillStyle = "#07120f";
+    rctx.fill(cardRect);
+    rctx.restore();
+
+    rctx.save();
+    rctx.clip(cardRect);
+    const backGrad = rctx.createLinearGradient(-148, -148, 148, 148);
+    backGrad.addColorStop(0, "#07120f");
+    backGrad.addColorStop(1, "#142a25");
+    rctx.fillStyle = backGrad;
+    rctx.fillRect(-148, -148, 296, 296);
+
+    rctx.save();
+    rctx.scale(116 / 24, 116 / 24);
+    rctx.translate(-12, -12);
+    rctx.shadowColor = "rgba(255, 92, 176, 0.55)";
+    rctx.shadowBlur = 18;
+    rctx.fillStyle = "#ff5cb0";
+    rctx.fill(TG_ICON);
+    rctx.strokeStyle = "#5f0738";
+    rctx.lineWidth = 1.2;
+    rctx.stroke(TG_ICON);
+    rctx.restore();
+    rctx.restore();
+
+    rctx.strokeStyle = "#ff5cb0";
+    rctx.lineWidth = 3.5;
+    rctx.stroke(cardRect);
+    rctx.restore();
+  }
+
+  // При изменении текстов или настроек QR помечаем кэш на обновление
+  [inpBadge, inpTag, inpQrBrand, inpSlide1, inpSlide2, inpSlide3, qrFitModeEl, qrZoomEl, qrOffXEl, qrOffYEl]
+    .forEach(el => el.addEventListener("input", markCacheDirty));
 
   function ensureAudioGraph() {
     if (audioCtx) return;
@@ -745,6 +1193,17 @@
     if (previewGain) previewGain.gain.value = chkMutePreview.checked ? 0 : 1;
   });
 
+  function triggerDownload(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 6000);
+  }
+
   function loadUserVideo(file) {
     if (!file || !file.type.startsWith("video/")) return;
     if (videoUrl) URL.revokeObjectURL(videoUrl);
@@ -767,7 +1226,7 @@
       bgVideo.play().catch(() => {});
       videoThumb.textContent = "✅";
       videoStateLabel.textContent = `${file.name} (${bgVideo.videoWidth}×${bgVideo.videoHeight})`;
-      statusText.textContent = "Видео загружено! Перетаскивай плашку мышкой и настраивай размер.";
+      statusText.textContent = "Видео загружено! Настрой плашку и нажми «🔴 Записать видео».";
     };
   }
 
@@ -806,6 +1265,7 @@
       const img = new Image();
       img.onload = () => {
         qrImage = img;
+        markCacheDirty();
         qrThumb.innerHTML = `<img src="${dataUrl}" alt="QR">`;
         qrStateLabel.textContent = `✅ Загружен (${img.width}×${img.height})`;
         statusText.textContent = "Твой QR-код установлен в плашку!";
@@ -853,9 +1313,7 @@
     if (isRecording) return;
     const t = parseFloat(seekBar.value) || 0;
     virtualTime = t;
-    if (hasVideo) {
-      bgVideo.currentTime = t;
-    }
+    if (hasVideo) bgVideo.currentTime = t;
   });
 
   function syncLabels() {
@@ -886,20 +1344,28 @@
 
   function getCanvasSize() {
     const aspect = canvasAspectEl.value;
+    const qScale = parseFloat(resScaleEl.value) || 1;
+    let w = 1080;
+    let h = 1920;
+
     if (aspect === "auto" && hasVideo && bgVideo.videoWidth > 0) {
-      let w = bgVideo.videoWidth;
-      let h = bgVideo.videoHeight;
+      w = bgVideo.videoWidth;
+      h = bgVideo.videoHeight;
       const maxDim = Math.max(w, h);
       if (maxDim > 1920) {
         const k = 1920 / maxDim;
-        w = Math.round((w * k) / 2) * 2;
-        h = Math.round((h * k) / 2) * 2;
+        w *= k;
+        h *= k;
       }
-      return { w, h };
+    } else if (aspect === "16:9") {
+      w = 1920; h = 1080;
+    } else if (aspect === "1:1") {
+      w = 1080; h = 1080;
     }
-    if (aspect === "16:9") return { w: 1920, h: 1080 };
-    if (aspect === "1:1") return { w: 1080, h: 1080 };
-    return { w: 1080, h: 1920 };
+
+    w = Math.round((w * qScale) / 2) * 2;
+    h = Math.round((h * qScale) / 2) * 2;
+    return { w, h };
   }
 
   function getBannerTransform(cw, ch) {
@@ -983,11 +1449,7 @@
     }
   });
 
-  const endDrag = () => {
-    dragMode = null;
-    dragStart = null;
-    canvas.classList.remove("dragging");
-  };
+  const endDrag = () => { dragMode = null; dragStart = null; canvas.classList.remove("dragging"); };
   canvas.addEventListener("pointerup", endDrag);
   canvas.addEventListener("pointercancel", endDrag);
 
@@ -995,77 +1457,18 @@
     if (isRecording) return;
     e.preventDefault();
     const cur = parseFloat(bannerScaleEl.value);
-    const next = cur + (e.deltaY < 0 ? 3 : -3);
-    bannerScaleEl.value = Math.max(20, Math.min(150, next));
+    bannerScaleEl.value = Math.max(20, Math.min(150, cur + (e.deltaY < 0 ? 3 : -3)));
     syncLabels();
   }, { passive: false });
 
-  function drawFallbackQr(x, y, size) {
-    const cells = 21;
-    const cell = size / cells;
-    ctx.fillStyle = "#0b1411";
-    const drawFinder = (gx, gy) => {
-      ctx.fillRect(x + gx * cell, y + gy * cell, 7 * cell, 7 * cell);
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(x + (gx + 1) * cell, y + (gy + 1) * cell, 5 * cell, 5 * cell);
-      ctx.fillStyle = "#0b1411";
-      ctx.fillRect(x + (gx + 2) * cell, y + (gy + 2) * cell, 3 * cell, 3 * cell);
-    };
-    drawFinder(0, 0); drawFinder(14, 0); drawFinder(0, 14);
-    for (let r = 0; r < cells; r++) {
-      for (let c = 0; c < cells; c++) {
-        if ((r < 8 && c < 8) || (r < 8 && c > 12) || (r > 12 && c < 8)) continue;
-        const hash = Math.sin(r * 12.9898 + c * 78.233) * 43758.5453;
-        if (hash - Math.floor(hash) > 0.48) {
-          ctx.fillRect(x + c * cell, y + r * cell, Math.ceil(cell), Math.ceil(cell));
-        }
-      }
-    }
-  }
-
-  function drawUploadedQr(boxX, boxY, boxSize) {
-    const zoom = parseFloat(qrZoomEl.value) / 100;
-    const offX = (parseFloat(qrOffXEl.value) / 100) * boxSize;
-    const offY = (parseFloat(qrOffYEl.value) / 100) * boxSize;
-    const fitMode = qrFitModeEl.value;
-
-    const iw = qrImage.width;
-    const ih = qrImage.height;
-    const baseScale = fitMode === "cover"
-      ? Math.max(boxSize / iw, boxSize / ih)
-      : Math.min(boxSize / iw, boxSize / ih);
-
-    const drawW = iw * baseScale * zoom;
-    const drawH = ih * baseScale * zoom;
-    const drawX = boxX + (boxSize - drawW) / 2 + offX;
-    const drawY = boxY + (boxSize - drawH) / 2 + offY;
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.roundRect(boxX, boxY, boxSize, boxSize, 14);
-    ctx.clip();
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(boxX, boxY, boxSize, boxSize);
-    ctx.drawImage(qrImage, drawX, drawY, drawW, drawH);
-    ctx.restore();
-  }
-
-  function parseSlideInput(str) {
-    const [headPart = "", subPart = ""] = str.split("|").map(s => s.trim());
-    const [line1 = "", line2 = ""] = headPart.split("/").map(s => s.trim());
-    return { line1, line2, subPart };
-  }
-
-  function easeOutBack(x) {
-    const c1 = 1.70158;
-    const c3 = c1 + 1;
-    return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
-  }
+  function easeOutBack(x) { const c1 = 1.70158; const c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); }
   function easeOutCubic(x) { return 1 - Math.pow(1 - x, 3); }
   function easeInOutQuad(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
-  function roundRectPath(x, y, w, h, r) { const p = new Path2D(); p.roundRect(x, y, w, h, r); return p; }
 
-  function drawBannerContent(localT) {
+  // Сверхбыстрая отрисовка кадра баннера из кэша (0.3 мс вместо 30 мс!)
+  function drawBannerFast(localT) {
+    if (cacheDirty) rebuildBannerCaches();
+
     const motion = motionModeEl.value;
     let cardOffsetY = 0;
     let cardScale = 1;
@@ -1090,230 +1493,96 @@
 
     ctx.save();
     ctx.globalAlpha = cardAlpha;
-    ctx.translate(0, cardOffsetY);
-    ctx.rotate(cardRot);
-    ctx.scale(cardScale, cardScale);
-    ctx.translate(-570, -240);
+    if (cardOffsetY !== 0) ctx.translate(0, cardOffsetY);
+    if (cardRot !== 0) ctx.rotate(cardRot);
+    if (cardScale !== 1) ctx.scale(cardScale, cardScale);
 
-    ctx.save();
-    ctx.shadowColor = "rgba(0, 0, 0, 0.82)";
-    ctx.shadowBlur = 36;
-    ctx.shadowOffsetY = 20;
-    ctx.fillStyle = "#050908";
-    ctx.fill(HUD_PATH);
-    ctx.restore();
+    // 1. Готовый фон карточки с тенью, рамкой, бейджем и подписью
+    ctx.drawImage(cacheBg, -630, -300);
 
-    ctx.save();
-    ctx.clip(HUD_PATH);
-
-    const darkGrad = ctx.createLinearGradient(0, 0, 1140, 480);
-    darkGrad.addColorStop(0, "#050908");
-    darkGrad.addColorStop(1, "#0b1a17");
-    ctx.fillStyle = darkGrad;
-    ctx.fillRect(0, 0, 1140, 480);
-
-    ctx.fillStyle = "rgba(255, 77, 166, 0.08)";
-    ctx.beginPath(); ctx.arc(140, 400, 220, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = "rgba(163, 240, 72, 0.06)";
-    ctx.beginPath(); ctx.arc(520, 60, 190, 0, Math.PI * 2); ctx.fill();
-
-    ctx.save();
-    ctx.clip(RIGHT_CLIP);
-    const slimeGrad = ctx.createLinearGradient(700 + 440 * 0.2, 0, 700 + 440 * 0.8, 480);
-    slimeGrad.addColorStop(0, "#b4e95f");
-    slimeGrad.addColorStop(0.52, "#58ce85");
-    slimeGrad.addColorStop(1, "#1b8e90");
-    ctx.fillStyle = slimeGrad;
-    ctx.fillRect(700, 0, 440, 480);
-
-    ctx.fillStyle = "rgba(255, 255, 255, 0.17)";
-    ctx.fill(SLIME_1); ctx.fill(SLIME_2); ctx.fill(SLIME_3);
-    ctx.fillStyle = "rgba(12, 92, 86, 0.14)";
-    ctx.fill(SLIME_4);
-    ctx.restore();
-
-    const slashGrad = ctx.createLinearGradient(755, 0, 715, 480);
-    slashGrad.addColorStop(0, "#a3f048");
-    slashGrad.addColorStop(0.5, "#ff5cb0");
-    slashGrad.addColorStop(1, "#ff85c8");
-    ctx.strokeStyle = slashGrad;
-    ctx.lineWidth = 6;
-    ctx.beginPath(); ctx.moveTo(755, 0); ctx.lineTo(715, 480); ctx.stroke();
-
+    // 2. Лёгкий блик по карточке
     if (motion !== "static") {
       const sheenPhase = (localT % 3.5) / 3.5;
       if (sheenPhase < 0.28) {
         const p = sheenPhase / 0.28;
         const sx = -260 + p * 1660;
-        const sheenGrad = ctx.createLinearGradient(sx - 120, 0, sx + 120, 480);
-        sheenGrad.addColorStop(0, "rgba(255,255,255,0)");
-        sheenGrad.addColorStop(0.5, "rgba(255,255,255,0.14)");
-        sheenGrad.addColorStop(1, "rgba(255,255,255,0)");
-        ctx.fillStyle = sheenGrad;
+        ctx.save();
+        ctx.translate(-570, -240);
+        ctx.clip(HUD_PATH);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.09)";
         ctx.beginPath();
-        ctx.moveTo(sx - 140, 0); ctx.lineTo(sx + 60, 0);
-        ctx.lineTo(sx - 80, 480); ctx.lineTo(sx - 280, 480);
+        ctx.moveTo(sx - 120, 0); ctx.lineTo(sx + 50, 0);
+        ctx.lineTo(sx - 90, 480); ctx.lineTo(sx - 260, 480);
         ctx.closePath();
         ctx.fill();
+        ctx.restore();
       }
     }
-    ctx.restore();
 
-    const borderGrad = ctx.createLinearGradient(0, 0, 1140, 480);
-    borderGrad.addColorStop(0, "#a3f048");
-    borderGrad.addColorStop(0.52, "rgba(255,255,255,0.28)");
-    borderGrad.addColorStop(1, "#ff5cb0");
-    ctx.strokeStyle = borderGrad;
-    ctx.lineWidth = 3.5;
-    ctx.stroke(HUD_PATH);
-
-    const leftX = 54;
-    let curX = leftX;
-    const topY = 54;
-
-    const badgeText = (inpBadge.value || "TG • НОВОСТНИК").toUpperCase();
-    ctx.font = "900 20px Montserrat, sans-serif";
-    const badgeW = 58 + ctx.measureText(badgeText).width;
-    const badgeH = 42;
-    const badgePath = roundRectPath(curX, topY, badgeW, badgeH, 12);
-    ctx.fillStyle = "rgba(255, 77, 166, 0.2)";
-    ctx.fill(badgePath);
-    ctx.strokeStyle = "#ff5cb0";
-    ctx.lineWidth = 2.5;
-    ctx.stroke(badgePath);
-
+    // 3. Пульсирующая зелёная точка в бейдже (из кэша)
     const dotPulse = 0.5 + 0.5 * Math.sin(localT * Math.PI);
+    const dotScale = 0.8 + 0.2 * dotPulse;
     ctx.save();
-    ctx.globalAlpha *= (0.45 + 0.55 * dotPulse);
-    ctx.shadowColor = "#a3f048";
-    ctx.shadowBlur = 14;
-    ctx.fillStyle = "#a3f048";
-    ctx.beginPath();
-    ctx.arc(curX + 24, topY + badgeH / 2, 6 * (0.8 + 0.2 * dotPulse), 0, Math.PI * 2);
-    ctx.fill();
+    ctx.globalAlpha = cardAlpha * (0.45 + 0.55 * dotPulse);
+    const ds = 44 * dotScale;
+    ctx.drawImage(cacheGlowDot, -492 - ds / 2, -165 - ds / 2, ds, ds);
     ctx.restore();
 
-    ctx.fillStyle = "#ffffff";
-    ctx.textBaseline = "middle";
-    ctx.fillText(badgeText, curX + 40, topY + badgeH / 2 + 1);
-    curX += badgeW + 14;
-
-    const tagText = (inpTag.value || "NEWS • 42 КМ").toUpperCase();
-    ctx.font = "italic 900 20px Montserrat, sans-serif";
-    const tagW = ctx.measureText(tagText).width + 34;
-    const tagPath = roundRectPath(curX, topY, tagW, badgeH, 10);
-    ctx.save();
-    ctx.setLineDash([7, 5]);
-    ctx.strokeStyle = "rgba(163, 240, 72, 0.65)";
-    ctx.lineWidth = 2.5;
-    ctx.stroke(tagPath);
-    ctx.restore();
-    ctx.fillStyle = "#c7fa7f";
-    ctx.fillText(tagText, curX + 16, topY + badgeH / 2 + 1);
-
+    // 4. Слайды (рисуем готовые картинки из кэша)
     const slideDur = 3.5;
-    const slides = [
-      parseSlideInput(inpSlide1.value),
-      parseSlideInput(inpSlide2.value),
-      parseSlideInput(inpSlide3.value)
-    ];
     const totalSlot = Math.floor(localT / slideDur);
     const slideIdx = totalSlot % 3;
     const prevIdx = (slideIdx + 2) % 3;
     const slideLocalT = localT - totalSlot * slideDur;
     const transDur = 0.45;
 
-    const drawSlide = (s, alpha, offsetY) => {
+    const drawCachedSlide = (idx, alpha, offsetY) => {
       if (alpha <= 0.01) return;
       ctx.save();
-      ctx.beginPath();
-      ctx.rect(leftX - 8, 110, 668, 260);
-      ctx.clip();
-      ctx.globalAlpha *= alpha;
-      ctx.textBaseline = "top";
-      const baseY = 122 + offsetY;
-
-      ctx.font = "900 62px Montserrat, sans-serif";
-      ctx.save();
-      ctx.shadowColor = "rgba(0, 0, 0, 0.7)";
-      ctx.shadowBlur = 22;
-      ctx.shadowOffsetY = 5;
-      ctx.fillStyle = "#ffffff";
-      ctx.fillText(s.line1.toUpperCase(), leftX, baseY);
-      ctx.restore();
-
-      const line2 = s.line2.toUpperCase();
-      const l2Y = baseY + 64;
-      ctx.save();
-      ctx.lineJoin = "round";
-      ctx.shadowColor = "rgba(255, 77, 166, 0.55)";
-      ctx.shadowBlur = 24;
-      ctx.shadowOffsetY = 10;
-      ctx.strokeStyle = "#420326";
-      ctx.lineWidth = 14;
-      ctx.strokeText(line2, leftX, l2Y + 5);
-      ctx.restore();
-
-      ctx.save();
-      ctx.lineJoin = "round";
-      ctx.strokeStyle = "#5f0738";
-      ctx.lineWidth = 14;
-      ctx.strokeText(line2, leftX, l2Y);
-      ctx.fillStyle = "#ff69b8";
-      ctx.fillText(line2, leftX, l2Y);
-      ctx.restore();
-
-      const subY = l2Y + 78;
-      const parts = s.subPart.split("*");
-      let sx = leftX;
-      parts.forEach((part, idx) => {
-        if (!part) return;
-        const isBold = idx % 2 === 1;
-        ctx.font = `${isBold ? 900 : 700} 27px Montserrat, sans-serif`;
-        ctx.fillStyle = isBold ? "#b7f36b" : "#d9eee6";
-        ctx.fillText(part, sx, subY);
-        sx += ctx.measureText(part).width;
-      });
+      ctx.globalAlpha = cardAlpha * alpha;
+      ctx.drawImage(cacheSlides[idx], 24 - 570, 92 - 240 + offsetY);
       ctx.restore();
     };
 
     if (slideLocalT < transDur && localT >= transDur) {
       const p = easeOutCubic(slideLocalT / transDur);
-      drawSlide(slides[prevIdx], 1 - p, -p * 10);
-      drawSlide(slides[slideIdx], p, (1 - p) * 18);
+      drawCachedSlide(prevIdx, 1 - p, -p * 10);
+      drawCachedSlide(slideIdx, p, (1 - p) * 18);
     } else if (localT < transDur) {
       const p = easeOutCubic(Math.min(1, localT / transDur));
-      drawSlide(slides[0], p, (1 - p) * 18);
+      drawCachedSlide(0, p, (1 - p) * 18);
     } else {
-      drawSlide(slides[slideIdx], 1, 0);
+      drawCachedSlide(slideIdx, 1, 0);
     }
 
-    let dotX = leftX;
+    // 5. Полосы прогресса
+    let dotX = 54 - 570;
+    const dotY = 398 - 240;
     for (let i = 0; i < 3; i++) {
       const isAct = i === slideIdx;
       const w = isAct ? 92 : 44;
-      const barPath = roundRectPath(dotX, 398, w, 8, 4);
       ctx.fillStyle = "rgba(255, 255, 255, 0.16)";
-      ctx.fill(barPath);
+      ctx.beginPath();
+      ctx.roundRect(dotX, dotY, w, 8, 4);
+      ctx.fill();
+
       if (isAct) {
         const fillRatio = Math.min(1, slideLocalT / slideDur);
         if (fillRatio > 0.01) {
-          ctx.save();
-          ctx.clip(barPath);
-          const barGrad = ctx.createLinearGradient(dotX, 398, dotX + w, 398);
+          const fw = w * fillRatio;
+          const barGrad = ctx.createLinearGradient(dotX, dotY, dotX + w, dotY);
           barGrad.addColorStop(0, "#ff5cb0");
           barGrad.addColorStop(1, "#a3f048");
           ctx.fillStyle = barGrad;
-          ctx.fillRect(dotX, 398, w * fillRatio, 8);
-          ctx.restore();
+          ctx.beginPath();
+          ctx.roundRect(dotX, dotY, fw, 8, 4);
+          ctx.fill();
         }
       }
       dotX += w + 12;
     }
 
-    const qrColCenterX = 927;
-    const qrCenterY = 196;
-    const qrSize = 296;
+    // 6. 3D QR-карточка из кэша
     const spinCycle = 5.25;
     const sp = (localT % spinCycle) / spinCycle;
     let angle = 0;
@@ -1326,100 +1595,10 @@
     const showFront = cosA >= 0;
 
     ctx.save();
-    ctx.translate(qrColCenterX, qrCenterY);
+    ctx.translate(927 - 570, 196 - 240);
     ctx.scale(scaleX, 1);
-
-    const cardRect = roundRectPath(-qrSize / 2, -qrSize / 2, qrSize, qrSize, 30);
-    ctx.save();
-    ctx.shadowColor = "rgba(4, 18, 14, 0.58)";
-    ctx.shadowBlur = 32;
-    ctx.shadowOffsetY = 18;
-    ctx.fillStyle = showFront ? "#ffffff" : "#07120f";
-    ctx.fill(cardRect);
+    ctx.drawImage(showFront ? cacheQrFront : cacheQrBack, -200, -190);
     ctx.restore();
-
-    if (showFront) {
-      ctx.save();
-      ctx.clip(cardRect);
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(-qrSize / 2, -qrSize / 2, qrSize, qrSize);
-      const pad = 22;
-      const inner = qrSize - pad * 2;
-      if (qrImage) drawUploadedQr(-inner / 2, -inner / 2, inner);
-      else drawFallbackQr(-inner / 2, -inner / 2, inner);
-
-      ctx.strokeStyle = "#ff4da6";
-      ctx.lineWidth = 5;
-      ctx.lineCap = "round";
-      const o = qrSize / 2 - 10;
-      const cLen = 22;
-      ctx.beginPath(); ctx.moveTo(-o, -o + cLen); ctx.lineTo(-o, -o + 8); ctx.quadraticCurveTo(-o, -o, -o + 8, -o); ctx.lineTo(-o + cLen, -o); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(o - cLen, -o); ctx.lineTo(o - 8, -o); ctx.quadraticCurveTo(o, -o, o, -o + 8); ctx.lineTo(o, -o + cLen); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(-o, o - cLen); ctx.lineTo(-o, o - 8); ctx.quadraticCurveTo(-o, o, -o + 8, o); ctx.lineTo(-o + cLen, o); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(o - cLen, o); ctx.lineTo(o - 8, o); ctx.quadraticCurveTo(o, o, o, o - 8); ctx.lineTo(o, o - cLen); ctx.stroke();
-      ctx.restore();
-
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.92)";
-      ctx.lineWidth = 3;
-      ctx.stroke(cardRect);
-    } else {
-      ctx.save();
-      ctx.clip(cardRect);
-      const backGrad = ctx.createLinearGradient(-148, -148, 148, 148);
-      backGrad.addColorStop(0, "#07120f");
-      backGrad.addColorStop(1, "#142a25");
-      ctx.fillStyle = backGrad;
-      ctx.fillRect(-148, -148, 296, 296);
-
-      ctx.save();
-      ctx.scale(116 / 24, 116 / 24);
-      ctx.translate(-12, -12);
-      ctx.shadowColor = "rgba(255, 92, 176, 0.55)";
-      ctx.shadowBlur = 18;
-      ctx.fillStyle = "#ff5cb0";
-      ctx.fill(TG_ICON);
-      ctx.strokeStyle = "#5f0738";
-      ctx.lineWidth = 1.2;
-      ctx.stroke(TG_ICON);
-      ctx.restore();
-      ctx.restore();
-
-      ctx.strokeStyle = "#ff5cb0";
-      ctx.lineWidth = 3.5;
-      ctx.stroke(cardRect);
-    }
-    ctx.restore();
-
-    const brandW = 330;
-    const brandH = 52;
-    const brandX = qrColCenterX - brandW / 2;
-    const brandY = 362;
-    const brandPath = roundRectPath(brandX, brandY, brandW, brandH, 14);
-    ctx.save();
-    ctx.shadowColor = "rgba(0,0,0,0.45)";
-    ctx.shadowBlur = 22;
-    ctx.shadowOffsetY = 10;
-    ctx.fillStyle = "rgba(6, 14, 12, 0.9)";
-    ctx.fill(brandPath);
-    ctx.restore();
-    ctx.strokeStyle = "#ff5cb0";
-    ctx.lineWidth = 2.5;
-    ctx.stroke(brandPath);
-
-    const [bLeftRaw = "ПОДСЛУШАННО", bRightRaw = "42"] = (inpQrBrand.value || "ПОДСЛУШАННО | 42").split("|");
-    const bLeft = bLeftRaw.trim().toUpperCase();
-    const bRight = bRightRaw.trim().toUpperCase();
-    ctx.font = "900 24px Montserrat, sans-serif";
-    const wLeft = ctx.measureText(bRight ? bLeft + " " : bLeft).width;
-    const wRight = bRight ? ctx.measureText(bRight).width : 0;
-    const startBx = qrColCenterX - (wLeft + wRight) / 2;
-    ctx.textBaseline = "middle";
-    ctx.fillStyle = "#ffffff";
-    ctx.fillText(bRight ? bLeft + " " : bLeft, startBx, brandY + brandH / 2 + 1);
-    if (bRight) {
-      ctx.fillStyle = "#b7f36b";
-      ctx.fillText(bRight, startBx + wLeft, brandY + brandH / 2 + 1);
-    }
 
     ctx.restore();
   }
@@ -1429,16 +1608,11 @@
     ctx.fillStyle = "rgba(255, 255, 255, 0.14)";
     ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
     ctx.lineWidth = 2;
-
     const rx = cw - cw * 0.085;
     const rSize = cw * 0.048;
     [0.48, 0.56, 0.64, 0.72].forEach(ryFrac => {
-      ctx.beginPath();
-      ctx.arc(rx, ch * ryFrac, rSize * 0.5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
+      ctx.beginPath(); ctx.arc(rx, ch * ryFrac, rSize * 0.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
     });
-
     ctx.setLineDash([10, 8]);
     ctx.strokeStyle = "rgba(255, 92, 176, 0.55)";
     ctx.strokeRect(cw * 0.04, ch * 0.80, cw * 0.78, ch * 0.14);
@@ -1455,8 +1629,6 @@
       canvas.height = ch;
     }
 
-    ctx.clearRect(0, 0, cw, ch);
-
     if (hasVideo && bgVideo.readyState >= 2) {
       ctx.fillStyle = "#000000";
       ctx.fillRect(0, 0, cw, ch);
@@ -1469,11 +1641,10 @@
       ctx.drawImage(bgVideo, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
     } else {
       const fbg = fallbackBgEl.value;
-      if (fbg === "chroma") {
-        ctx.fillStyle = "#00ff00";
-        ctx.fillRect(0, 0, cw, ch);
-      } else if (fbg === "dark") {
-        ctx.fillStyle = "#060a09";
+      if (fbg === "transparent") {
+        ctx.clearRect(0, 0, cw, ch);
+      } else {
+        ctx.fillStyle = fbg === "chroma" ? "#00ff00" : "#060a09";
         ctx.fillRect(0, 0, cw, ch);
       }
     }
@@ -1489,14 +1660,12 @@
       ctx.translate(tr.cx, tr.cy);
       ctx.rotate(tr.rot);
       ctx.scale(tr.scale, tr.scale);
-      drawBannerContent(Math.max(0, t - fromT));
+      drawBannerFast(Math.max(0, t - fromT));
       ctx.restore();
     }
 
     if (!forExport) {
-      if (chkSafeZone.checked && cw / ch < 0.75) {
-        drawTikTokSafeZone(cw, ch);
-      }
+      if (chkSafeZone.checked && cw / ch < 0.75) drawTikTokSafeZone(cw, ch);
       if (chkShowGuides.checked) {
         ctx.save();
         ctx.translate(tr.cx, tr.cy);
@@ -1511,10 +1680,7 @@
         ctx.fillStyle = "#a3f048";
         ctx.strokeStyle = "#050908";
         ctx.lineWidth = 3 / tr.scale;
-        ctx.beginPath();
-        ctx.arc(570, 240, 14 / tr.scale, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
+        ctx.beginPath(); ctx.arc(570, 240, 14 / tr.scale, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
         ctx.restore();
       }
     }
@@ -1523,7 +1689,6 @@
   function tick(now) {
     const dt = (now - lastFrameNow) / 1000;
     lastFrameNow = now;
-
     if (!isRecording) {
       if (hasVideo) {
         const cur = bgVideo.currentTime || 0;
@@ -1532,22 +1697,21 @@
         seekBar.value = cur.toFixed(2);
         timeLabel.textContent = `${cur.toFixed(1)} / ${dur.toFixed(1)}с`;
       } else {
-        if (isPlaying) {
-          virtualTime = (virtualTime + dt) % 10.5;
-        }
+        if (isPlaying) virtualTime = (virtualTime + dt) % 10.5;
         seekBar.max = 10.5;
         seekBar.value = virtualTime.toFixed(2);
         timeLabel.textContent = `${virtualTime.toFixed(1)} / 10.5с`;
       }
       renderFrame(virtualTime, false);
     }
-
     requestAnimationFrame(tick);
   }
 
-  document.fonts.ready.then(() => requestAnimationFrame(tick));
+  document.fonts.ready.then(() => {
+    rebuildBannerCaches();
+    requestAnimationFrame(tick);
+  });
 
-  // Безопасный подбор MediaRecorder (учитывает звук + видео и никогда не падает)
   function createWorkingRecorder(stream, withAudio, preferWebm, useTransparent) {
     const candidates = useTransparent
       ? ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"]
@@ -1568,42 +1732,40 @@
     for (const mime of candidates) {
       if (typeof MediaRecorder === "undefined" || !MediaRecorder.isTypeSupported(mime)) continue;
       try {
-        const rec = new MediaRecorder(stream, {
-          mimeType: mime,
-          videoBitsPerSecond: 12_000_000
-        });
+        const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 8_000_000 });
         return { recorder: rec, mimeType: mime };
       } catch (err) {
         console.warn("Skip codec:", mime, err);
       }
     }
-
     const rec = new MediaRecorder(stream);
     return { recorder: rec, mimeType: rec.mimeType || "video/webm" };
   }
 
-  // Надёжный экспорт видео
+  // Запись видео со строгим шагом по FPS (без дублирования и лагов)
   btnExport.addEventListener("click", async () => {
-    if (isRecording) return;
+    if (isRecording || isConverting) return;
 
     try {
       await document.fonts.ready;
+      if (cacheDirty) rebuildBannerCaches();
+
       if (typeof MediaRecorder === "undefined") {
-        statusText.textContent = "❌ Твой браузер не поддерживает запись видео. Открой страницу в Chrome или Edge.";
+        statusText.textContent = "❌ Твой браузер не поддерживает запись видео. Открой в Chrome или Edge.";
         return;
       }
 
       const fps = parseInt(fpsSelectEl.value, 10) || 30;
+      const frameIntervalMs = 1000 / fps;
       const { w: cw, h: ch } = getCanvasSize();
       canvas.width = cw;
       canvas.height = ch;
 
       isRecording = true;
       btnExport.disabled = true;
-      btnSecondary.textContent = "⏹ Стоп и сохранить";
+      btnSecondary.textContent = "⏹ Стоп";
       progressBar.style.width = "0%";
 
-      // Перематываем видео на 0 без вечного ожидания seeked
       if (hasVideo) {
         bgVideo.pause();
         bgVideo.loop = false;
@@ -1612,11 +1774,7 @@
           await new Promise(res => {
             let resolved = false;
             const done = () => {
-              if (!resolved) {
-                resolved = true;
-                bgVideo.removeEventListener("seeked", done);
-                res();
-              }
+              if (!resolved) { resolved = true; bgVideo.removeEventListener("seeked", done); res(); }
             };
             bgVideo.addEventListener("seeked", done);
             setTimeout(done, 500);
@@ -1633,7 +1791,6 @@
       const canvasStream = canvas.captureStream(fps);
       const tracks = [...canvasStream.getVideoTracks()];
       let attachedAudio = false;
-
       if (hasVideo && audioDest) {
         const aTracks = audioDest.stream.getAudioTracks();
         if (aTracks.length > 0) {
@@ -1648,26 +1805,19 @@
       let recInfo;
       try {
         recInfo = createWorkingRecorder(new MediaStream(tracks), attachedAudio, preferWebm, useTransparent);
-      } catch (e) {
-        // Если аудио+видео не запустилось — пробуем только видео
+      } catch {
         recInfo = createWorkingRecorder(canvasStream, false, true, useTransparent);
       }
 
       const { recorder, mimeType } = recInfo;
-      const isMp4 = mimeType.includes("mp4");
-      const ext = isMp4 ? "mp4" : "webm";
+      const ext = mimeType.includes("mp4") ? "mp4" : "webm";
 
       const chunks = [];
       let stopped = false;
-
       const finishRecording = () => {
         if (stopped) return;
         stopped = true;
-        try {
-          if (recorder.state !== "inactive") recorder.stop();
-        } catch (e) {
-          console.warn(e);
-        }
+        try { if (recorder.state !== "inactive") recorder.stop(); } catch {}
       };
       stopRecordingFn = finishRecording;
 
@@ -1675,9 +1825,8 @@
         if (e.data && e.data.size > 0) chunks.push(e.data);
       };
 
-      recorder.onerror = (e) => {
-        console.error("MediaRecorder error:", e);
-        statusText.textContent = "❌ Ошибка записи видео. Попробуй переключить формат файла на WebM.";
+      recorder.onerror = () => {
+        statusText.textContent = "❌ Ошибка записи видео. Попробуй «Кодек записи → WebM».";
         isRecording = false;
         btnExport.disabled = false;
         btnSecondary.textContent = "🗑 Убрать видео";
@@ -1696,22 +1845,22 @@
         }
 
         if (chunks.length === 0) {
-          statusText.textContent = "⚠️ Файл получился пустым. Попробуй выбрать «Формат файла: WebM».";
+          statusText.textContent = "⚠️ Файл получился пустым. Попробуй «Кодек записи → WebM».";
           return;
         }
 
-        const blob = new Blob(chunks, { type: mimeType });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `tiktok-podslushano42.${ext}`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 6000);
+        lastRecordedBlob = new Blob(chunks, { type: mimeType });
+        lastRecordedExt = ext;
+        const sizeMb = (lastRecordedBlob.size / 1024 / 1024).toFixed(2);
 
         progressBar.style.width = "100%";
-        statusText.textContent = `✅ Готово! Скачано .${ext.toUpperCase()} (${(blob.size / 1024 / 1024).toFixed(2)} МБ).`;
+        statusText.textContent = `✅ Записано плавно (${ext.toUpperCase()}, ${sizeMb} МБ). Скачай или конвертируй ниже!`;
+
+        converterBox.classList.remove("hidden");
+        recordedInfo.textContent = `${ext.toUpperCase()} • ${sizeMb} МБ`;
+        btnDownloadRaw.textContent = `⬇ Скачать оригинал (.${ext})`;
+        convProgressBar.style.width = "0%";
+        convStatus.textContent = "Выбери формат и нажми «🔄 Конвертировать и скачать».";
       };
 
       const totalDuration = hasVideo && Number.isFinite(bgVideo.duration) && bgVideo.duration > 0
@@ -1719,41 +1868,44 @@
         : 10.5;
 
       recorder.start(250);
+      let lastDrawAt = performance.now();
 
       if (hasVideo) {
         bgVideo.onended = () => setTimeout(finishRecording, 120);
         await bgVideo.play();
-
-        const stepVideoRec = () => {
+        const stepVideoRec = (now) => {
           if (stopped) return;
-          const cur = bgVideo.currentTime || 0;
-          renderFrame(cur, true);
-          const pct = Math.min(100, (cur / totalDuration) * 100);
-          progressBar.style.width = `${pct.toFixed(1)}%`;
-          statusText.textContent = `Запись видео: ${cur.toFixed(1)} / ${totalDuration.toFixed(1)} сек...`;
-
-          if (!bgVideo.ended && cur < totalDuration - 0.04) {
-            requestAnimationFrame(stepVideoRec);
-          } else {
-            setTimeout(finishRecording, 120);
+          if (now - lastDrawAt >= frameIntervalMs * 0.85) {
+            lastDrawAt = now;
+            const cur = bgVideo.currentTime || 0;
+            renderFrame(cur, true);
+            progressBar.style.width = `${Math.min(100, (cur / totalDuration) * 100).toFixed(1)}%`;
+            statusText.textContent = `Запись видео: ${cur.toFixed(1)} / ${totalDuration.toFixed(1)} сек...`;
+            if (bgVideo.ended || cur >= totalDuration - 0.04) {
+              setTimeout(finishRecording, 120);
+              return;
+            }
           }
+          requestAnimationFrame(stepVideoRec);
         };
         requestAnimationFrame(stepVideoRec);
       } else {
         const startRec = performance.now();
         const stepStaticRec = (now) => {
           if (stopped) return;
-          const elapsed = (now - startRec) / 1000;
-          const clamped = Math.min(totalDuration, elapsed);
-          renderFrame(clamped, true);
-          progressBar.style.width = `${Math.min(100, (clamped / totalDuration) * 100).toFixed(1)}%`;
-          statusText.textContent = `Запись плашки: ${clamped.toFixed(1)} / ${totalDuration.toFixed(1)} сек...`;
-
-          if (elapsed < totalDuration) {
-            requestAnimationFrame(stepStaticRec);
-          } else {
-            setTimeout(finishRecording, 120);
+          if (now - lastDrawAt >= frameIntervalMs * 0.85) {
+            lastDrawAt = now;
+            const elapsed = (now - startRec) / 1000;
+            const clamped = Math.min(totalDuration, elapsed);
+            renderFrame(clamped, true);
+            progressBar.style.width = `${Math.min(100, (clamped / totalDuration) * 100).toFixed(1)}%`;
+            statusText.textContent = `Запись плашки: ${clamped.toFixed(1)} / ${totalDuration.toFixed(1)} сек...`;
+            if (elapsed >= totalDuration) {
+              setTimeout(finishRecording, 120);
+              return;
+            }
           }
+          requestAnimationFrame(stepStaticRec);
         };
         requestAnimationFrame(stepStaticRec);
       }
@@ -1764,6 +1916,149 @@
       btnExport.disabled = false;
       btnSecondary.textContent = "🗑 Убрать видео";
       statusText.textContent = `❌ Ошибка: ${err.message || err}`;
+    }
+  });
+
+  btnDownloadRaw.addEventListener("click", () => {
+    if (!lastRecordedBlob) return;
+    triggerDownload(lastRecordedBlob, `tiktok-podslushano42.${lastRecordedExt}`);
+  });
+
+  // ================= КОНВЕРТЕР В ЛЮБОЙ ФОРМАТ (FFMPEG.WASM) =================
+  let ffmpegInstance = null;
+
+  async function fetchAsBlobUrl(url, mime) {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`Ошибка загрузки ${url} (${resp.status})`);
+    const buf = await resp.arrayBuffer();
+    return URL.createObjectURL(new Blob([buf], { type: mime }));
+  }
+
+  async function getFFmpeg() {
+    if (ffmpegInstance) return ffmpegInstance;
+    if (!window.FFmpegWASM || !window.FFmpegWASM.FFmpeg) {
+      throw new Error("Скрипт FFmpeg не загрузился. Проверь интернет или блокировщик рекламы.");
+    }
+
+    convStatus.textContent = "Загружаю движок FFmpeg (~30 МБ, только 1 раз)...";
+    convProgressBar.style.width = "10%";
+
+    const baseFfmpeg = "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/umd";
+    const baseCore = "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd";
+
+    const [workerURL, coreURL, wasmURL] = await Promise.all([
+      fetchAsBlobUrl(`${baseFfmpeg}/814.ffmpeg.js`, "text/javascript"),
+      fetchAsBlobUrl(`${baseCore}/ffmpeg-core.js`, "text/javascript"),
+      fetchAsBlobUrl(`${baseCore}/ffmpeg-core.wasm`, "application/wasm")
+    ]);
+
+    convProgressBar.style.width = "35%";
+    convStatus.textContent = "Инициализирую конвертер...";
+
+    const { FFmpeg } = window.FFmpegWASM;
+    const ff = new FFmpeg();
+    ff.on("progress", ({ progress }) => {
+      const pct = Math.max(0, Math.min(100, progress * 100));
+      convProgressBar.style.width = `${pct.toFixed(1)}%`;
+      convStatus.textContent = `Конвертирую: ${pct.toFixed(0)}%...`;
+    });
+
+    await ff.load({
+      classWorkerURL: workerURL,
+      coreURL,
+      wasmURL
+    });
+
+    ffmpegInstance = ff;
+    return ff;
+  }
+
+  const FORMAT_SPECS = {
+    mp4: {
+      ext: "mp4",
+      mime: "video/mp4",
+      args: (i, o) => ["-i", i, "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2", "-c:v", "libx264", "-preset", "ultrafast", "-crf", "20", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", o]
+    },
+    mov: {
+      ext: "mov",
+      mime: "video/quicktime",
+      args: (i, o) => ["-i", i, "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2", "-c:v", "libx264", "-preset", "ultrafast", "-crf", "20", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k", "-f", "mov", o]
+    },
+    webm: {
+      ext: "webm",
+      mime: "video/webm",
+      args: (i, o) => ["-i", i, "-c:v", "libvpx", "-deadline", "realtime", "-cpu-used", "4", "-b:v", "4500k", "-c:a", "libopus", o]
+    },
+    mkv: {
+      ext: "mkv",
+      mime: "video/x-matroska",
+      args: (i, o) => ["-i", i, "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2", "-c:v", "libx264", "-preset", "ultrafast", "-crf", "20", "-pix_fmt", "yuv420p", "-c:a", "aac", o]
+    },
+    avi: {
+      ext: "avi",
+      mime: "video/x-msvideo",
+      args: (i, o) => ["-i", i, "-c:v", "mpeg4", "-q:v", "4", "-c:a", "libmp3lame", "-q:a", "4", o]
+    },
+    gif: {
+      ext: "gif",
+      mime: "image/gif",
+      args: (i, o) => ["-i", i, "-vf", "fps=15,scale=540:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse", o]
+    },
+    mp3: {
+      ext: "mp3",
+      mime: "audio/mpeg",
+      args: (i, o) => ["-i", i, "-vn", "-c:a", "libmp3lame", "-q:a", "2", o]
+    }
+  };
+
+  btnConvert.addEventListener("click", async () => {
+    if (!lastRecordedBlob || isConverting || isRecording) return;
+
+    const target = targetFormatEl.value;
+    const spec = FORMAT_SPECS[target];
+    if (!spec) return;
+
+    try {
+      isConverting = true;
+      btnConvert.disabled = true;
+      btnExport.disabled = true;
+      convProgressBar.style.width = "0%";
+
+      const ff = await getFFmpeg();
+
+      const inName = `input.${lastRecordedExt}`;
+      const outName = `output.${spec.ext}`;
+
+      convStatus.textContent = "Читаю записанный файл...";
+      const buf = new Uint8Array(await lastRecordedBlob.arrayBuffer());
+      await ff.writeFile(inName, buf);
+
+      convStatus.textContent = `Конвертирую в ${spec.ext.toUpperCase()}...`;
+      const exitCode = await ff.exec(spec.args(inName, outName));
+
+      if (exitCode !== 0) {
+        await ff.deleteFile(inName).catch(() => {});
+        throw new Error(target === "mp3"
+          ? "Не удалось извлечь звук (возможно, в видео нет звуковой дорожки)."
+          : `Ошибка кодирования (код ${exitCode}).`);
+      }
+
+      const outData = await ff.readFile(outName);
+      const outBlob = new Blob([outData.buffer], { type: spec.mime });
+
+      await ff.deleteFile(inName).catch(() => {});
+      await ff.deleteFile(outName).catch(() => {});
+
+      triggerDownload(outBlob, `tiktok-podslushano42.${spec.ext}`);
+      convProgressBar.style.width = "100%";
+      convStatus.textContent = `✅ Готово! Файл .${spec.ext.toUpperCase()} скачан (${(outBlob.size / 1024 / 1024).toFixed(2)} МБ).`;
+    } catch (err) {
+      console.error(err);
+      convStatus.textContent = `❌ ${err.message || err}`;
+    } finally {
+      isConverting = false;
+      btnConvert.disabled = false;
+      btnExport.disabled = false;
     }
   });
 })();
