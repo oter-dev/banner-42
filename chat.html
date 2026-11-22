@@ -10,7 +10,6 @@
   :root {
     --user-col-width: 175px;   /* Ширина колонки со значками и ником */
     --font-size: 16px;         /* Размер шрифта чата */
-    --bg-alpha: 0.68;          /* Затемнение подложки чата (0 — полностью прозрачно) */
     --bottom-pad: 42px;        /* Нижний отступ от края, чтобы текст не упирался в низ */
   }
 
@@ -30,34 +29,6 @@
     position: relative;
   }
 
-  /* Отдельный слой фона: плавно тает сверху, справа И снизу — никаких резких обрезок при подъёме в OBS */
-  #chat-bg {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background: linear-gradient(
-      90deg,
-      rgba(6, 7, 10, var(--bg-alpha)) 0%,
-      rgba(6, 7, 10, calc(var(--bg-alpha) * 0.85)) 76%,
-      rgba(6, 7, 10, 0) 100%
-    );
-    -webkit-mask-image: linear-gradient(
-      to bottom,
-      transparent 0%,
-      black 10%,
-      black 88%,
-      transparent 100%
-    );
-    mask-image: linear-gradient(
-      to bottom,
-      transparent 0%,
-      black 10%,
-      black 88%,
-      transparent 100%
-    );
-  }
-
-  /* Контейнер сообщений: растворяются только старые сообщения сверху, а нижнее всегда на 100% чёткое */
   #chat-viewport {
     position: relative;
     z-index: 2;
@@ -121,7 +92,6 @@
     object-fit: contain;
     display: block;
     flex-shrink: 0;
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.85));
   }
 
   .username {
@@ -131,9 +101,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     min-width: 0;
-    text-shadow:
-      0 1px 3px rgba(0, 0, 0, 0.95),
-      0 0 8px rgba(0, 0, 0, 0.7);
   }
 
   /* Правая колонка: текст сообщения и смайлы */
@@ -146,9 +113,6 @@
     line-height: 1.38;
     word-wrap: break-word;
     overflow-wrap: anywhere;
-    text-shadow:
-      0 1px 3px rgba(0, 0, 0, 0.95),
-      0 0 8px rgba(0, 0, 0, 0.75);
   }
 
   .msg-row.action-msg .msg-col {
@@ -178,7 +142,6 @@
 </head>
 <body>
 
-<div id="chat-bg"></div>
 <div id="chat-viewport">
   <div id="chat-container"></div>
 </div>
