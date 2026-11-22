@@ -1,0 +1,1692 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TikTok Видео-Редактор — ПОДСЛУШАННО 42</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,700;0,800;0,900;1,900&display=swap" rel="stylesheet">
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  :root {
+    --bg: #070b0a;
+    --panel: #0e1715;
+    --panel-2: #121f1c;
+    --border: #213a34;
+    --lime: #a3f048;
+    --pink: #ff5cb0;
+    --text: #eef7f4;
+    --muted: #8fb0a6;
+  }
+
+  body {
+    min-height: 100vh;
+    background: radial-gradient(circle at 50% 0%, #142a25 0%, #050807 75%);
+    color: var(--text);
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    padding: 16px 20px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .topbar {
+    width: 100%;
+    max-width: 1440px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .brand-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .pill {
+    background: linear-gradient(90deg, var(--pink), var(--lime));
+    color: #06100d;
+    font-weight: 900;
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+  }
+
+  .brand-head h1 {
+    font-size: 18px;
+    font-weight: 900;
+  }
+
+  .layout {
+    width: 100%;
+    max-width: 1440px;
+    display: grid;
+    grid-template-columns: minmax(340px, 1.15fr) minmax(360px, 1fr);
+    gap: 16px;
+    align-items: start;
+  }
+
+  @media (max-width: 1020px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  /* Левая колонка: плеер и интерактивный холст */
+  .preview-panel {
+    background: #040706;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+    position: sticky;
+    top: 14px;
+  }
+
+  .canvas-frame {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+    background-image:
+      linear-gradient(45deg, #101917 25%, transparent 25%),
+      linear-gradient(-45deg, #101917 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #101917 75%),
+      linear-gradient(-45deg, transparent 75%, #101917 75%);
+    background-size: 24px 24px;
+    background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+    background-color: #090f0d;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+  }
+
+  canvas#stage {
+    display: block;
+    max-width: 100%;
+    max-height: 66vh;
+    width: auto;
+    height: auto;
+    touch-action: none;
+    cursor: grab;
+  }
+
+  canvas#stage.dragging { cursor: grabbing; }
+
+  .player-bar {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 8px 12px;
+  }
+
+  .player-bar input[type="range"] {
+    flex: 1;
+    accent-color: var(--lime);
+    cursor: pointer;
+  }
+
+  .time-label {
+    font-size: 11.5px;
+    font-weight: 800;
+    color: var(--muted);
+    min-width: 82px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hint-line {
+    font-size: 11.5px;
+    color: var(--muted);
+    font-weight: 600;
+    text-align: center;
+  }
+
+  /* Правая колонка: настройки */
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .card h3 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--lime);
+    font-weight: 900;
+  }
+
+  .dropzone {
+    border: 2px dashed #31594f;
+    background: #08100e;
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .dropzone:hover,
+  .dropzone.dragover {
+    border-color: var(--lime);
+    background: #0d1b17;
+  }
+
+  .thumb-box {
+    width: 52px;
+    height: 52px;
+    border-radius: 10px;
+    background: #13231f;
+    border: 2px solid var(--pink);
+    flex-shrink: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+  }
+
+  .thumb-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .drop-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .drop-title {
+    font-size: 12.5px;
+    font-weight: 900;
+    color: #ffffff;
+  }
+
+  .drop-sub {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .row-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .field label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .field input,
+  .field select {
+    width: 100%;
+    background: #080f0d;
+    border: 1px solid #26423b;
+    color: var(--text);
+    border-radius: 9px;
+    padding: 7px 10px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    outline: none;
+  }
+
+  .field input[type="range"] {
+    padding: 3px 0;
+    accent-color: var(--lime);
+    cursor: pointer;
+  }
+
+  .field input:focus,
+  .field select:focus {
+    border-color: var(--pink);
+  }
+
+  .check-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .check-row label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+
+  .check-row input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--lime);
+    cursor: pointer;
+  }
+
+  .btn {
+    border: none;
+    border-radius: 10px;
+    padding: 10px 13px;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 900;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: transform 0.12s, filter 0.15s, opacity 0.15s;
+  }
+
+  .btn:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+  .btn:active:not(:disabled) { transform: translateY(0); }
+  .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  .btn-export {
+    background: linear-gradient(90deg, var(--lime), #58ce85);
+    color: #06100d;
+  }
+
+  .btn-pink {
+    background: linear-gradient(90deg, var(--pink), #ff2d85);
+    color: #ffffff;
+  }
+
+  .btn-dark {
+    background: #13221e;
+    color: var(--text);
+    border: 1px solid #2b4b43;
+    padding: 8px 10px;
+    font-size: 11.5px;
+  }
+
+  .progress-wrap {
+    width: 100%;
+    height: 8px;
+    background: #060b0a;
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid #223b35;
+  }
+
+  .progress-bar {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--pink), var(--lime));
+    transition: width 0.08s linear;
+  }
+
+  .status {
+    font-size: 11.5px;
+    color: var(--muted);
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
+  details.card summary {
+    cursor: pointer;
+    list-style: none;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--lime);
+    font-weight: 900;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  details.card summary::after {
+    content: "▾";
+    color: var(--pink);
+    font-size: 15px;
+  }
+
+  details.card[open] summary {
+    margin-bottom: 10px;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand-head">
+    <span class="pill">TIKTOK СТУДИЯ</span>
+    <h1>Наложи плашку «ПОДСЛУШАННО 42» на своё видео</h1>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- ЛЕВАЯ ЧАСТЬ: ХОЛСТ И ПЛЕЕР -->
+  <div class="preview-panel">
+    <div class="canvas-frame">
+      <canvas id="stage" width="1080" height="1920"></canvas>
+    </div>
+
+    <div class="player-bar">
+      <button class="btn btn-dark" id="btnPlayPause" type="button">⏸ Пауза</button>
+      <input type="range" id="seekBar" min="0" max="10.5" step="0.02" value="0">
+      <span class="time-label" id="timeLabel">0.0 / 10.5с</span>
+    </div>
+
+    <div class="hint-line">
+      💡 Тяни плашку прямо по видео мышкой / пальцем. Колёсико мыши или уголок рамки меняет размер.
+    </div>
+  </div>
+
+  <!-- ПРАВАЯ ЧАСТЬ: ИНСТРУМЕНТЫ -->
+  <div class="sidebar">
+    <!-- 1. Загрузка своего видео и QR -->
+    <div class="card">
+      <h3>1. Твоё видео и QR-код</h3>
+      <div class="row-2">
+        <div class="dropzone" id="videoDropzone">
+          <div class="thumb-box" id="videoThumb">🎬</div>
+          <div class="drop-info">
+            <div class="drop-title">Загрузить видео</div>
+            <div class="drop-sub" id="videoStateLabel">Нажми или перетащи MP4/MOV</div>
+          </div>
+        </div>
+        <input type="file" id="videoFileInput" accept="video/*" hidden>
+
+        <div class="dropzone" id="qrDropzone">
+          <div class="thumb-box" id="qrThumb" style="background:#fff;color:#111;">📷</div>
+          <div class="drop-info">
+            <div class="drop-title">Загрузить QR-код</div>
+            <div class="drop-sub" id="qrStateLabel">Фото / скрин / Ctrl+V</div>
+          </div>
+        </div>
+        <input type="file" id="qrFileInput" accept="image/*" hidden>
+      </div>
+
+      <div class="row-2">
+        <div class="field">
+          <label>Размер итогового видео</label>
+          <select id="canvasAspect">
+            <option value="auto" selected>Как в загруженном видео</option>
+            <option value="9:16">TikTok 9:16 (1080 × 1920)</option>
+            <option value="16:9">YouTube 16:9 (1920 × 1080)</option>
+            <option value="1:1">Квадрат 1:1 (1080 × 1080)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Как вписать твоё видео</label>
+          <select id="videoFit">
+            <option value="cover" selected>Заполнить экран (Cover)</option>
+            <option value="contain">Вписать целиком (Contain)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="check-row">
+        <label><input type="checkbox" id="chkSafeZone" checked> Сетка кнопок TikTok</label>
+        <label><input type="checkbox" id="chkShowGuides" checked> Рамка выделения</label>
+        <label><input type="checkbox" id="chkMutePreview"> Без звука в плеере</label>
+      </div>
+    </div>
+
+    <!-- 2. Размер, положение и время плашки -->
+    <div class="card">
+      <h3>2. Положение, размер и тайминг плашки</h3>
+
+      <div class="row-3">
+        <button class="btn btn-dark" type="button" data-preset="top">⬆ Сверху</button>
+        <button class="btn btn-dark" type="button" data-preset="center">⏹ По центру</button>
+        <button class="btn btn-dark" type="button" data-preset="bottom">⬇ Снизу (TikTok)</button>
+      </div>
+
+      <div class="row-2">
+        <div class="field">
+          <label>Размер плашки <span id="valScale">88%</span></label>
+          <input id="bannerScale" type="range" min="20" max="150" value="88">
+        </div>
+        <div class="field">
+          <label>Наклон (поворот) <span id="valRot">0°</span></label>
+          <input id="bannerRot" type="range" min="-25" max="25" value="0">
+        </div>
+      </div>
+
+      <div class="row-2">
+        <div class="field">
+          <label>Позиция X <span id="valPosX">50%</span></label>
+          <input id="bannerX" type="range" min="0" max="100" step="0.5" value="50">
+        </div>
+        <div class="field">
+          <label>Позиция Y <span id="valPosY">72%</span></label>
+          <input id="bannerY" type="range" min="0" max="100" step="0.5" value="72">
+        </div>
+      </div>
+
+      <div class="row-2">
+        <div class="field">
+          <label>Прозрачность <span id="valAlpha">100%</span></label>
+          <input id="bannerAlpha" type="range" min="20" max="100" value="100">
+        </div>
+        <div class="field">
+          <label>Эффект «Мусор Дроп»</label>
+          <select id="motionMode">
+            <option value="drop" selected>Влёт + Левитация + Блик</option>
+            <option value="float">Парение + Блик</option>
+            <option value="static">Статичная карточка</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row-2">
+        <div class="field">
+          <label>Появляется с (сек)</label>
+          <input id="showFrom" type="number" min="0" step="0.5" value="0">
+        </div>
+        <div class="field">
+          <label>Исчезает на (сек, 0 = до конца)</label>
+          <input id="showTo" type="number" min="0" step="0.5" value="0">
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Подстройка QR и текстов (сворачивается) -->
+    <details class="card">
+      <summary>3. Подстройка QR-кода и текстов на плашке</summary>
+      <div style="display:flex;flex-direction:column;gap:9px;">
+        <div class="row-2">
+          <div class="field">
+            <label>Вписать QR</label>
+            <select id="qrFitMode">
+              <option value="contain" selected>Целиком</option>
+              <option value="cover">Обрезать в квадрат</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Приблизить QR <span id="qrZoomVal">100%</span></label>
+            <input id="qrZoom" type="range" min="100" max="240" value="100">
+          </div>
+        </div>
+        <div class="row-2">
+          <div class="field">
+            <label>Сдвиг QR X <span id="qrOffXVal">0</span></label>
+            <input id="qrOffX" type="range" min="-50" max="50" value="0">
+          </div>
+          <div class="field">
+            <label>Сдвиг QR Y <span id="qrOffYVal">0</span></label>
+            <input id="qrOffY" type="range" min="-50" max="50" value="0">
+          </div>
+        </div>
+        <div class="row-3">
+          <div class="field">
+            <label>Бейдж</label>
+            <input id="inpBadge" type="text" value="TG • НОВОСТНИК">
+          </div>
+          <div class="field">
+            <label>Тег</label>
+            <input id="inpTag" type="text" value="NEWS • 42 КМ">
+          </div>
+          <div class="field">
+            <label>Под QR</label>
+            <input id="inpQrBrand" type="text" value="ПОДСЛУШАННО | 42">
+          </div>
+        </div>
+        <div class="field">
+          <label>Слайд 1</label>
+          <input id="inpSlide1" type="text" value="НИШЕВОЕ / СМИ 42 КМ | Самое главное *без лишней воды*">
+        </div>
+        <div class="field">
+          <label>Слайд 2</label>
+          <input id="inpSlide2" type="text" value="ГЛАВНЫЙ / НОВОСТНИК | Свежие инсайды и сводки *24/7*">
+        </div>
+        <div class="field">
+          <label>Слайд 3</label>
+          <input id="inpSlide3" type="text" value="СКАНИРУЙ / QR-КОД | Залетай в ленту и будь *в курсе*">
+        </div>
+      </div>
+    </details>
+
+    <!-- 4. Скачать итоговое видео -->
+    <div class="card">
+      <h3>4. Скачать готовое видео</h3>
+      <div class="row-2">
+        <div class="field">
+          <label>Фон если видео не загружено</label>
+          <select id="fallbackBg">
+            <option value="dark" selected>Тёмный (#060a09)</option>
+            <option value="chroma">Хромакей Зелёный (#00FF00)</option>
+            <option value="transparent">Прозрачный (WebM)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>FPS экспорта</label>
+          <select id="fpsSelect">
+            <option value="30" selected>30 FPS (быстро)</option>
+            <option value="60">60 FPS (максимум)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row-2">
+        <button class="btn btn-export" id="btnExport" type="button">⬇ Скачать видео с плашкой</button>
+        <button class="btn btn-pink" id="btnRemoveVideo" type="button">🗑 Убрать фоновое видео</button>
+      </div>
+
+      <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+      <div class="status" id="statusText">Загрузи своё видео и QR-код — подгони плашку прямо на экране и скачай.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Скрытый элемент для проигрывания видео пользователя -->
+<video id="bgVideo" playsinline loop crossorigin="anonymous" style="display:none;"></video>
+
+<script>
+(() => {
+  const canvas = document.getElementById("stage");
+  const ctx = canvas.getContext("2d");
+  const bgVideo = document.getElementById("bgVideo");
+
+  // Элементы управления
+  const videoDropzone = document.getElementById("videoDropzone");
+  const videoFileInput = document.getElementById("videoFileInput");
+  const videoStateLabel = document.getElementById("videoStateLabel");
+  const videoThumb = document.getElementById("videoThumb");
+
+  const qrDropzone = document.getElementById("qrDropzone");
+  const qrFileInput = document.getElementById("qrFileInput");
+  const qrStateLabel = document.getElementById("qrStateLabel");
+  const qrThumb = document.getElementById("qrThumb");
+
+  const canvasAspectEl = document.getElementById("canvasAspect");
+  const videoFitEl = document.getElementById("videoFit");
+  const chkSafeZone = document.getElementById("chkSafeZone");
+  const chkShowGuides = document.getElementById("chkShowGuides");
+  const chkMutePreview = document.getElementById("chkMutePreview");
+
+  const btnPlayPause = document.getElementById("btnPlayPause");
+  const seekBar = document.getElementById("seekBar");
+  const timeLabel = document.getElementById("timeLabel");
+
+  const bannerScaleEl = document.getElementById("bannerScale");
+  const bannerRotEl = document.getElementById("bannerRot");
+  const bannerXEl = document.getElementById("bannerX");
+  const bannerYEl = document.getElementById("bannerY");
+  const bannerAlphaEl = document.getElementById("bannerAlpha");
+  const motionModeEl = document.getElementById("motionMode");
+  const showFromEl = document.getElementById("showFrom");
+  const showToEl = document.getElementById("showTo");
+
+  const valScale = document.getElementById("valScale");
+  const valRot = document.getElementById("valRot");
+  const valPosX = document.getElementById("valPosX");
+  const valPosY = document.getElementById("valPosY");
+  const valAlpha = document.getElementById("valAlpha");
+
+  const qrFitModeEl = document.getElementById("qrFitMode");
+  const qrZoomEl = document.getElementById("qrZoom");
+  const qrOffXEl = document.getElementById("qrOffX");
+  const qrOffYEl = document.getElementById("qrOffY");
+  const qrZoomVal = document.getElementById("qrZoomVal");
+  const qrOffXVal = document.getElementById("qrOffXVal");
+  const qrOffYVal = document.getElementById("qrOffYVal");
+
+  const inpBadge = document.getElementById("inpBadge");
+  const inpTag = document.getElementById("inpTag");
+  const inpQrBrand = document.getElementById("inpQrBrand");
+  const inpSlide1 = document.getElementById("inpSlide1");
+  const inpSlide2 = document.getElementById("inpSlide2");
+  const inpSlide3 = document.getElementById("inpSlide3");
+
+  const fallbackBgEl = document.getElementById("fallbackBg");
+  const fpsSelectEl = document.getElementById("fpsSelect");
+  const btnExport = document.getElementById("btnExport");
+  const btnRemoveVideo = document.getElementById("btnRemoveVideo");
+  const progressBar = document.getElementById("progressBar");
+  const statusText = document.getElementById("statusText");
+
+  // Геометрия исходной плашки (1140 × 480)
+  const HUD_PATH = new Path2D("M 52,4 L 1110,4 Q 1136,4 1136,30 L 1136,428 L 1088,476 L 30,476 Q 4,476 4,450 L 4,52 Z");
+  const RIGHT_CLIP = new Path2D("M 755,0 L 1140,0 L 1140,480 L 715,480 Z");
+  const SLIME_1 = new Path2D("M800,30 C860,0 930,35 908,95 C886,155 810,145 782,102 C754,59 768,48 800,30 Z");
+  const SLIME_2 = new Path2D("M1010,75 C1080,45 1135,95 1110,165 C1085,235 995,215 978,158 C961,101 972,92 1010,75 Z");
+  const SLIME_3 = new Path2D("M775,345 C840,315 905,365 880,430 C855,495 755,480 742,418 C729,356 742,362 775,345 Z");
+  const SLIME_4 = new Path2D("M1020,310 C1085,280 1140,335 1115,400 C1090,465 995,445 982,385 C969,325 985,328 1020,310 Z");
+  const TG_ICON = new Path2D("M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z");
+
+  let qrImage = null;
+  let hasVideo = false;
+  let videoUrl = null;
+  let isPlaying = true;
+  let isRecording = false;
+  let virtualTime = 0;
+  let lastFrameNow = performance.now();
+
+  // Web Audio для сохранения звука видео при экспорте
+  let audioCtx = null;
+  let mediaSource = null;
+  let audioDest = null;
+  let previewGain = null;
+
+  function ensureAudioGraph() {
+    if (audioCtx) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    audioCtx = new AC();
+    mediaSource = audioCtx.createMediaElementSource(bgVideo);
+    previewGain = audioCtx.createGain();
+    previewGain.gain.value = chkMutePreview.checked ? 0 : 1;
+    audioDest = audioCtx.createMediaStreamDestination();
+    mediaSource.connect(previewGain);
+    previewGain.connect(audioCtx.destination);
+    mediaSource.connect(audioDest);
+  }
+
+  chkMutePreview.addEventListener("change", () => {
+    if (previewGain) previewGain.gain.value = chkMutePreview.checked ? 0 : 1;
+  });
+
+  // Загрузка пользовательского видео
+  function loadUserVideo(file) {
+    if (!file || !file.type.startsWith("video/")) return;
+    if (videoUrl) URL.revokeObjectURL(videoUrl);
+    videoUrl = URL.createObjectURL(file);
+    bgVideo.src = videoUrl;
+    bgVideo.loop = true;
+    bgVideo.muted = false;
+
+    bgVideo.onloadedmetadata = async () => {
+      hasVideo = true;
+      ensureAudioGraph();
+      if (audioCtx && audioCtx.state === "suspended") {
+        await audioCtx.resume().catch(() => {});
+      }
+      seekBar.max = bgVideo.duration.toFixed(2);
+      seekBar.value = 0;
+      bgVideo.currentTime = 0;
+      isPlaying = true;
+      btnPlayPause.textContent = "⏸ Пауза";
+      bgVideo.play().catch(() => {});
+      videoThumb.textContent = "✅";
+      videoStateLabel.textContent = `${file.name} (${bgVideo.videoWidth}×${bgVideo.videoHeight})`;
+      statusText.textContent = "Видео загружено! Перетаскивай плашку мышкой и настраивай размер.";
+    };
+  }
+
+  videoDropzone.addEventListener("click", () => videoFileInput.click());
+  videoFileInput.addEventListener("change", (e) => loadUserVideo(e.target.files?.[0]));
+  videoDropzone.addEventListener("dragover", (e) => { e.preventDefault(); videoDropzone.classList.add("dragover"); });
+  videoDropzone.addEventListener("dragleave", () => videoDropzone.classList.remove("dragover"));
+  videoDropzone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    videoDropzone.classList.remove("dragover");
+    loadUserVideo(e.dataTransfer?.files?.[0]);
+  });
+
+  btnRemoveVideo.addEventListener("click", () => {
+    hasVideo = false;
+    bgVideo.pause();
+    bgVideo.removeAttribute("src");
+    bgVideo.load();
+    if (videoUrl) { URL.revokeObjectURL(videoUrl); videoUrl = null; }
+    videoThumb.textContent = "🎬";
+    videoStateLabel.textContent = "Нажми или перетащи MP4/MOV";
+    seekBar.max = 10.5;
+    virtualTime = 0;
+    statusText.textContent = "Фоновое видео удалено.";
+  });
+
+  // Загрузка пользовательского QR-кода
+  function loadQrFromFile(file) {
+    if (!file || !file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result;
+      const img = new Image();
+      img.onload = () => {
+        qrImage = img;
+        qrThumb.innerHTML = `<img src="${dataUrl}" alt="QR">`;
+        qrStateLabel.textContent = `✅ Загружен (${img.width}×${img.height})`;
+        statusText.textContent = "Твой QR-код установлен в плашку!";
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  qrDropzone.addEventListener("click", () => qrFileInput.click());
+  qrFileInput.addEventListener("change", (e) => loadQrFromFile(e.target.files?.[0]));
+  qrDropzone.addEventListener("dragover", (e) => { e.preventDefault(); qrDropzone.classList.add("dragover"); });
+  qrDropzone.addEventListener("dragleave", () => qrDropzone.classList.remove("dragover"));
+  qrDropzone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    qrDropzone.classList.remove("dragover");
+    loadQrFromFile(e.dataTransfer?.files?.[0]);
+  });
+
+  window.addEventListener("paste", (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.type.startsWith("image/")) {
+        loadQrFromFile(item.getAsFile());
+        break;
+      }
+    }
+  });
+
+  // Плеер
+  btnPlayPause.addEventListener("click", async () => {
+    if (hasVideo && audioCtx && audioCtx.state === "suspended") {
+      await audioCtx.resume().catch(() => {});
+    }
+    isPlaying = !isPlaying;
+    btnPlayPause.textContent = isPlaying ? "⏸ Пауза" : "▶ Играть";
+    if (hasVideo) {
+      if (isPlaying) bgVideo.play().catch(() => {});
+      else bgVideo.pause();
+    }
+  });
+
+  seekBar.addEventListener("input", () => {
+    const t = parseFloat(seekBar.value) || 0;
+    virtualTime = t;
+    if (hasVideo) {
+      bgVideo.currentTime = t;
+    }
+  });
+
+  // Обновление лейблов ползунков
+  function syncLabels() {
+    valScale.textContent = bannerScaleEl.value + "%";
+    valRot.textContent = bannerRotEl.value + "°";
+    valPosX.textContent = bannerXEl.value + "%";
+    valPosY.textContent = bannerYEl.value + "%";
+    valAlpha.textContent = bannerAlphaEl.value + "%";
+    qrZoomVal.textContent = qrZoomEl.value + "%";
+    qrOffXVal.textContent = qrOffXEl.value;
+    qrOffYVal.textContent = qrOffYEl.value;
+  }
+  [bannerScaleEl, bannerRotEl, bannerXEl, bannerYEl, bannerAlphaEl, qrZoomEl, qrOffXEl, qrOffYEl]
+    .forEach(el => el.addEventListener("input", syncLabels));
+  syncLabels();
+
+  // Быстрые пресеты позиции
+  document.querySelectorAll("[data-preset]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const p = btn.dataset.preset;
+      bannerXEl.value = 50;
+      bannerRotEl.value = 0;
+      if (p === "top") { bannerYEl.value = 18; bannerScaleEl.value = 88; }
+      if (p === "center") { bannerYEl.value = 50; bannerScaleEl.value = 92; }
+      if (p === "bottom") { bannerYEl.value = 72; bannerScaleEl.value = 86; }
+      syncLabels();
+    });
+  });
+
+  // Вычисление размеров холста
+  function getCanvasSize() {
+    const aspect = canvasAspectEl.value;
+    if (aspect === "auto" && hasVideo && bgVideo.videoWidth > 0) {
+      let w = bgVideo.videoWidth;
+      let h = bgVideo.videoHeight;
+      const maxDim = Math.max(w, h);
+      if (maxDim > 1920) {
+        const k = 1920 / maxDim;
+        w = Math.round((w * k) / 2) * 2;
+        h = Math.round((h * k) / 2) * 2;
+      }
+      return { w, h };
+    }
+    if (aspect === "16:9") return { w: 1920, h: 1080 };
+    if (aspect === "1:1") return { w: 1080, h: 1080 };
+    return { w: 1080, h: 1920 };
+  }
+
+  function getBannerTransform(cw, ch) {
+    const minSide = Math.min(cw, ch);
+    // Базовый масштаб: при 100% плашка 1140px занимает всю ширину (с небольшим запасом)
+    const scale = (parseFloat(bannerScaleEl.value) / 100) * (minSide / 1140);
+    const cx = (parseFloat(bannerXEl.value) / 100) * cw;
+    const cy = (parseFloat(bannerYEl.value) / 100) * ch;
+    const rot = (parseFloat(bannerRotEl.value) * Math.PI) / 180;
+    return { scale, cx, cy, rot };
+  }
+
+  // Перетаскивание и масштабирование плашки прямо мышкой / пальцем по канвасу
+  let dragMode = null; // "move" | "resize"
+  let dragStart = null;
+
+  function canvasPoint(e) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: (e.clientX - rect.left) * (canvas.width / rect.width),
+      y: (e.clientY - rect.top) * (canvas.height / rect.height)
+    };
+  }
+
+  function toBannerLocal(px, py, tr) {
+    const dx = px - tr.cx;
+    const dy = py - tr.cy;
+    const cos = Math.cos(-tr.rot);
+    const sin = Math.sin(-tr.rot);
+    return {
+      x: (dx * cos - dy * sin) / tr.scale,
+      y: (dx * sin + dy * cos) / tr.scale
+    };
+  }
+
+  canvas.addEventListener("pointerdown", (e) => {
+    if (isRecording) return;
+    const pt = canvasPoint(e);
+    const tr = getBannerTransform(canvas.width, canvas.height);
+    const loc = toBannerLocal(pt.x, pt.y, tr);
+
+    // Проверка уголка масштабирования (правый нижний угол карточки: x ~ 570, y ~ 240)
+    if (Math.hypot(loc.x - 570, loc.y - 240) < 55 / tr.scale) {
+      dragMode = "resize";
+      dragStart = {
+        pt,
+        origScale: parseFloat(bannerScaleEl.value),
+        origDist: Math.hypot(pt.x - tr.cx, pt.y - tr.cy) || 1
+      };
+      canvas.setPointerCapture(e.pointerId);
+      canvas.classList.add("dragging");
+      return;
+    }
+
+    // Проверка попадания в плашку (-570..570, -240..240)
+    if (loc.x >= -590 && loc.x <= 590 && loc.y >= -260 && loc.y <= 260) {
+      dragMode = "move";
+      dragStart = {
+        pt,
+        origX: parseFloat(bannerXEl.value),
+        origY: parseFloat(bannerYEl.value)
+      };
+      canvas.setPointerCapture(e.pointerId);
+      canvas.classList.add("dragging");
+    }
+  });
+
+  canvas.addEventListener("pointermove", (e) => {
+    if (!dragMode || !dragStart) return;
+    const pt = canvasPoint(e);
+
+    if (dragMode === "move") {
+      let nx = dragStart.origX + ((pt.x - dragStart.pt.x) / canvas.width) * 100;
+      let ny = dragStart.origY + ((pt.y - dragStart.pt.y) / canvas.height) * 100;
+      // Магнитное прилипание к центру по X и Y
+      if (Math.abs(nx - 50) < 1.6) nx = 50;
+      if (Math.abs(ny - 50) < 1.6) ny = 50;
+      bannerXEl.value = Math.max(0, Math.min(100, nx)).toFixed(1);
+      bannerYEl.value = Math.max(0, Math.min(100, ny)).toFixed(1);
+      syncLabels();
+    } else if (dragMode === "resize") {
+      const tr = getBannerTransform(canvas.width, canvas.height);
+      const curDist = Math.hypot(pt.x - tr.cx, pt.y - tr.cy);
+      const nextScale = dragStart.origScale * (curDist / dragStart.origDist);
+      bannerScaleEl.value = Math.round(Math.max(20, Math.min(150, nextScale)));
+      syncLabels();
+    }
+  });
+
+  const endDrag = () => {
+    dragMode = null;
+    dragStart = null;
+    canvas.classList.remove("dragging");
+  };
+  canvas.addEventListener("pointerup", endDrag);
+  canvas.addEventListener("pointercancel", endDrag);
+
+  canvas.addEventListener("wheel", (e) => {
+    if (isRecording) return;
+    e.preventDefault();
+    const cur = parseFloat(bannerScaleEl.value);
+    const next = cur + (e.deltaY < 0 ? 3 : -3);
+    bannerScaleEl.value = Math.max(20, Math.min(150, next));
+    syncLabels();
+  }, { passive: false });
+
+  // Хелперы отрисовки
+  function drawFallbackQr(x, y, size) {
+    const cells = 21;
+    const cell = size / cells;
+    ctx.fillStyle = "#0b1411";
+    const drawFinder = (gx, gy) => {
+      ctx.fillRect(x + gx * cell, y + gy * cell, 7 * cell, 7 * cell);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(x + (gx + 1) * cell, y + (gy + 1) * cell, 5 * cell, 5 * cell);
+      ctx.fillStyle = "#0b1411";
+      ctx.fillRect(x + (gx + 2) * cell, y + (gy + 2) * cell, 3 * cell, 3 * cell);
+    };
+    drawFinder(0, 0);
+    drawFinder(14, 0);
+    drawFinder(0, 14);
+    for (let r = 0; r < cells; r++) {
+      for (let c = 0; c < cells; c++) {
+        if ((r < 8 && c < 8) || (r < 8 && c > 12) || (r > 12 && c < 8)) continue;
+        const hash = Math.sin(r * 12.9898 + c * 78.233) * 43758.5453;
+        if (hash - Math.floor(hash) > 0.48) {
+          ctx.fillRect(x + c * cell, y + r * cell, Math.ceil(cell), Math.ceil(cell));
+        }
+      }
+    }
+  }
+
+  function drawUploadedQr(boxX, boxY, boxSize) {
+    const zoom = parseFloat(qrZoomEl.value) / 100;
+    const offX = (parseFloat(qrOffXEl.value) / 100) * boxSize;
+    const offY = (parseFloat(qrOffYEl.value) / 100) * boxSize;
+    const fitMode = qrFitModeEl.value;
+
+    const iw = qrImage.width;
+    const ih = qrImage.height;
+    const baseScale = fitMode === "cover"
+      ? Math.max(boxSize / iw, boxSize / ih)
+      : Math.min(boxSize / iw, boxSize / ih);
+
+    const drawW = iw * baseScale * zoom;
+    const drawH = ih * baseScale * zoom;
+    const drawX = boxX + (boxSize - drawW) / 2 + offX;
+    const drawY = boxY + (boxSize - drawH) / 2 + offY;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(boxX, boxY, boxSize, boxSize, 14);
+    ctx.clip();
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(boxX, boxY, boxSize, boxSize);
+    ctx.drawImage(qrImage, drawX, drawY, drawW, drawH);
+    ctx.restore();
+  }
+
+  function parseSlideInput(str) {
+    const [headPart = "", subPart = ""] = str.split("|").map(s => s.trim());
+    const [line1 = "", line2 = ""] = headPart.split("/").map(s => s.trim());
+    return { line1, line2, subPart };
+  }
+
+  function easeOutBack(x) {
+    const c1 = 1.70158;
+    const c3 = c1 + 1;
+    return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
+  }
+  function easeOutCubic(x) { return 1 - Math.pow(1 - x, 3); }
+  function easeInOutQuad(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
+  function roundRectPath(x, y, w, h, r) { const p = new Path2D(); p.roundRect(x, y, w, h, r); return p; }
+
+  function drawBannerContent(localT) {
+    const motion = motionModeEl.value;
+    let cardOffsetY = 0;
+    let cardScale = 1;
+    let cardRot = 0;
+    let cardAlpha = parseFloat(bannerAlphaEl.value) / 100;
+
+    if (motion === "drop") {
+      const introDur = 0.55;
+      if (localT < introDur) {
+        const p = Math.min(1, localT / introDur);
+        cardScale = 0.82 + 0.18 * easeOutBack(p);
+        cardOffsetY = (1 - easeOutCubic(p)) * 42;
+        cardAlpha *= Math.min(1, p * 2.2);
+      } else {
+        cardOffsetY = Math.sin((localT - introDur) * 1.9) * 7;
+        cardRot = Math.sin((localT - introDur) * 1.2) * 0.006;
+      }
+    } else if (motion === "float") {
+      cardOffsetY = Math.sin(localT * 1.9) * 7;
+      cardRot = Math.sin(localT * 1.2) * 0.006;
+    }
+
+    ctx.save();
+    ctx.globalAlpha = cardAlpha;
+    ctx.translate(0, cardOffsetY);
+    ctx.rotate(cardRot);
+    ctx.scale(cardScale, cardScale);
+    ctx.translate(-570, -240);
+
+    // Тень карточки
+    ctx.save();
+    ctx.shadowColor = "rgba(0, 0, 0, 0.82)";
+    ctx.shadowBlur = 36;
+    ctx.shadowOffsetY = 20;
+    ctx.fillStyle = "#050908";
+    ctx.fill(HUD_PATH);
+    ctx.restore();
+
+    // Внутренность карточки
+    ctx.save();
+    ctx.clip(HUD_PATH);
+
+    const darkGrad = ctx.createLinearGradient(0, 0, 1140, 480);
+    darkGrad.addColorStop(0, "#050908");
+    darkGrad.addColorStop(1, "#0b1a17");
+    ctx.fillStyle = darkGrad;
+    ctx.fillRect(0, 0, 1140, 480);
+
+    ctx.fillStyle = "rgba(255, 77, 166, 0.08)";
+    ctx.beginPath(); ctx.arc(140, 400, 220, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "rgba(163, 240, 72, 0.06)";
+    ctx.beginPath(); ctx.arc(520, 60, 190, 0, Math.PI * 2); ctx.fill();
+
+    ctx.save();
+    ctx.clip(RIGHT_CLIP);
+    const slimeGrad = ctx.createLinearGradient(700 + 440 * 0.2, 0, 700 + 440 * 0.8, 480);
+    slimeGrad.addColorStop(0, "#b4e95f");
+    slimeGrad.addColorStop(0.52, "#58ce85");
+    slimeGrad.addColorStop(1, "#1b8e90");
+    ctx.fillStyle = slimeGrad;
+    ctx.fillRect(700, 0, 440, 480);
+
+    ctx.fillStyle = "rgba(255, 255, 255, 0.17)";
+    ctx.fill(SLIME_1); ctx.fill(SLIME_2); ctx.fill(SLIME_3);
+    ctx.fillStyle = "rgba(12, 92, 86, 0.14)";
+    ctx.fill(SLIME_4);
+    ctx.restore();
+
+    const slashGrad = ctx.createLinearGradient(755, 0, 715, 480);
+    slashGrad.addColorStop(0, "#a3f048");
+    slashGrad.addColorStop(0.5, "#ff5cb0");
+    slashGrad.addColorStop(1, "#ff85c8");
+    ctx.strokeStyle = slashGrad;
+    ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.moveTo(755, 0); ctx.lineTo(715, 480); ctx.stroke();
+
+    if (motion !== "static") {
+      const sheenPhase = (localT % 3.5) / 3.5;
+      if (sheenPhase < 0.28) {
+        const p = sheenPhase / 0.28;
+        const sx = -260 + p * 1660;
+        const sheenGrad = ctx.createLinearGradient(sx - 120, 0, sx + 120, 480);
+        sheenGrad.addColorStop(0, "rgba(255,255,255,0)");
+        sheenGrad.addColorStop(0.5, "rgba(255,255,255,0.14)");
+        sheenGrad.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = sheenGrad;
+        ctx.beginPath();
+        ctx.moveTo(sx - 140, 0); ctx.lineTo(sx + 60, 0);
+        ctx.lineTo(sx - 80, 480); ctx.lineTo(sx - 280, 480);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+
+    const borderGrad = ctx.createLinearGradient(0, 0, 1140, 480);
+    borderGrad.addColorStop(0, "#a3f048");
+    borderGrad.addColorStop(0.52, "rgba(255,255,255,0.28)");
+    borderGrad.addColorStop(1, "#ff5cb0");
+    ctx.strokeStyle = borderGrad;
+    ctx.lineWidth = 3.5;
+    ctx.stroke(HUD_PATH);
+
+    // Бейдж + тег
+    const leftX = 54;
+    let curX = leftX;
+    const topY = 54;
+
+    const badgeText = (inpBadge.value || "TG • НОВОСТНИК").toUpperCase();
+    ctx.font = "900 20px Montserrat, sans-serif";
+    const badgeW = 58 + ctx.measureText(badgeText).width;
+    const badgeH = 42;
+    const badgePath = roundRectPath(curX, topY, badgeW, badgeH, 12);
+    ctx.fillStyle = "rgba(255, 77, 166, 0.2)";
+    ctx.fill(badgePath);
+    ctx.strokeStyle = "#ff5cb0";
+    ctx.lineWidth = 2.5;
+    ctx.stroke(badgePath);
+
+    const dotPulse = 0.5 + 0.5 * Math.sin(localT * Math.PI);
+    ctx.save();
+    ctx.globalAlpha *= (0.45 + 0.55 * dotPulse);
+    ctx.shadowColor = "#a3f048";
+    ctx.shadowBlur = 14;
+    ctx.fillStyle = "#a3f048";
+    ctx.beginPath();
+    ctx.arc(curX + 24, topY + badgeH / 2, 6 * (0.8 + 0.2 * dotPulse), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.fillStyle = "#ffffff";
+    ctx.textBaseline = "middle";
+    ctx.fillText(badgeText, curX + 40, topY + badgeH / 2 + 1);
+    curX += badgeW + 14;
+
+    const tagText = (inpTag.value || "NEWS • 42 КМ").toUpperCase();
+    ctx.font = "italic 900 20px Montserrat, sans-serif";
+    const tagW = ctx.measureText(tagText).width + 34;
+    const tagPath = roundRectPath(curX, topY, tagW, badgeH, 10);
+    ctx.save();
+    ctx.setLineDash([7, 5]);
+    ctx.strokeStyle = "rgba(163, 240, 72, 0.65)";
+    ctx.lineWidth = 2.5;
+    ctx.stroke(tagPath);
+    ctx.restore();
+    ctx.fillStyle = "#c7fa7f";
+    ctx.fillText(tagText, curX + 16, topY + badgeH / 2 + 1);
+
+    // Слайды
+    const slideDur = 3.5;
+    const slides = [
+      parseSlideInput(inpSlide1.value),
+      parseSlideInput(inpSlide2.value),
+      parseSlideInput(inpSlide3.value)
+    ];
+    const totalSlot = Math.floor(localT / slideDur);
+    const slideIdx = totalSlot % 3;
+    const prevIdx = (slideIdx + 2) % 3;
+    const slideLocalT = localT - totalSlot * slideDur;
+    const transDur = 0.45;
+
+    const drawSlide = (s, alpha, offsetY) => {
+      if (alpha <= 0.01) return;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(leftX - 8, 110, 668, 260);
+      ctx.clip();
+      ctx.globalAlpha *= alpha;
+      ctx.textBaseline = "top";
+      const baseY = 122 + offsetY;
+
+      ctx.font = "900 62px Montserrat, sans-serif";
+      ctx.save();
+      ctx.shadowColor = "rgba(0, 0, 0, 0.7)";
+      ctx.shadowBlur = 22;
+      ctx.shadowOffsetY = 5;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(s.line1.toUpperCase(), leftX, baseY);
+      ctx.restore();
+
+      const line2 = s.line2.toUpperCase();
+      const l2Y = baseY + 64;
+      ctx.save();
+      ctx.lineJoin = "round";
+      ctx.shadowColor = "rgba(255, 77, 166, 0.55)";
+      ctx.shadowBlur = 24;
+      ctx.shadowOffsetY = 10;
+      ctx.strokeStyle = "#420326";
+      ctx.lineWidth = 14;
+      ctx.strokeText(line2, leftX, l2Y + 5);
+      ctx.restore();
+
+      ctx.save();
+      ctx.lineJoin = "round";
+      ctx.strokeStyle = "#5f0738";
+      ctx.lineWidth = 14;
+      ctx.strokeText(line2, leftX, l2Y);
+      ctx.fillStyle = "#ff69b8";
+      ctx.fillText(line2, leftX, l2Y);
+      ctx.restore();
+
+      const subY = l2Y + 78;
+      const parts = s.subPart.split("*");
+      let sx = leftX;
+      parts.forEach((part, idx) => {
+        if (!part) return;
+        const isBold = idx % 2 === 1;
+        ctx.font = `${isBold ? 900 : 700} 27px Montserrat, sans-serif`;
+        ctx.fillStyle = isBold ? "#b7f36b" : "#d9eee6";
+        ctx.fillText(part, sx, subY);
+        sx += ctx.measureText(part).width;
+      });
+      ctx.restore();
+    };
+
+    if (slideLocalT < transDur && localT >= transDur) {
+      const p = easeOutCubic(slideLocalT / transDur);
+      drawSlide(slides[prevIdx], 1 - p, -p * 10);
+      drawSlide(slides[slideIdx], p, (1 - p) * 18);
+    } else if (localT < transDur) {
+      const p = easeOutCubic(Math.min(1, localT / transDur));
+      drawSlide(slides[0], p, (1 - p) * 18);
+    } else {
+      drawSlide(slides[slideIdx], 1, 0);
+    }
+
+    // Полосы прогресса
+    let dotX = leftX;
+    for (let i = 0; i < 3; i++) {
+      const isAct = i === slideIdx;
+      const w = isAct ? 92 : 44;
+      const barPath = roundRectPath(dotX, 398, w, 8, 4);
+      ctx.fillStyle = "rgba(255, 255, 255, 0.16)";
+      ctx.fill(barPath);
+      if (isAct) {
+        const fillRatio = Math.min(1, slideLocalT / slideDur);
+        if (fillRatio > 0.01) {
+          ctx.save();
+          ctx.clip(barPath);
+          const barGrad = ctx.createLinearGradient(dotX, 398, dotX + w, 398);
+          barGrad.addColorStop(0, "#ff5cb0");
+          barGrad.addColorStop(1, "#a3f048");
+          ctx.fillStyle = barGrad;
+          ctx.fillRect(dotX, 398, w * fillRatio, 8);
+          ctx.restore();
+        }
+      }
+      dotX += w + 12;
+    }
+
+    // 3D QR
+    const qrColCenterX = 927;
+    const qrCenterY = 196;
+    const qrSize = 296;
+    const spinCycle = 5.25;
+    const sp = (localT % spinCycle) / spinCycle;
+    let angle = 0;
+    if (sp > 0.56) {
+      const rotP = Math.min(1, (sp - 0.56) / 0.34);
+      angle = easeInOutQuad(rotP) * Math.PI * 2;
+    }
+    const cosA = Math.cos(angle);
+    const scaleX = Math.max(0.025, Math.abs(cosA));
+    const showFront = cosA >= 0;
+
+    ctx.save();
+    ctx.translate(qrColCenterX, qrCenterY);
+    ctx.scale(scaleX, 1);
+
+    const cardRect = roundRectPath(-qrSize / 2, -qrSize / 2, qrSize, qrSize, 30);
+    ctx.save();
+    ctx.shadowColor = "rgba(4, 18, 14, 0.58)";
+    ctx.shadowBlur = 32;
+    ctx.shadowOffsetY = 18;
+    ctx.fillStyle = showFront ? "#ffffff" : "#07120f";
+    ctx.fill(cardRect);
+    ctx.restore();
+
+    if (showFront) {
+      ctx.save();
+      ctx.clip(cardRect);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(-qrSize / 2, -qrSize / 2, qrSize, qrSize);
+      const pad = 22;
+      const inner = qrSize - pad * 2;
+      if (qrImage) drawUploadedQr(-inner / 2, -inner / 2, inner);
+      else drawFallbackQr(-inner / 2, -inner / 2, inner);
+
+      ctx.strokeStyle = "#ff4da6";
+      ctx.lineWidth = 5;
+      ctx.lineCap = "round";
+      const o = qrSize / 2 - 10;
+      const cLen = 22;
+      ctx.beginPath(); ctx.moveTo(-o, -o + cLen); ctx.lineTo(-o, -o + 8); ctx.quadraticCurveTo(-o, -o, -o + 8, -o); ctx.lineTo(-o + cLen, -o); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(o - cLen, -o); ctx.lineTo(o - 8, -o); ctx.quadraticCurveTo(o, -o, o, -o + 8); ctx.lineTo(o, -o + cLen); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-o, o - cLen); ctx.lineTo(-o, o - 8); ctx.quadraticCurveTo(-o, o, -o + 8, o); ctx.lineTo(-o + cLen, o); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(o - cLen, o); ctx.lineTo(o - 8, o); ctx.quadraticCurveTo(o, o, o, o - 8); ctx.lineTo(o, o - cLen); ctx.stroke();
+      ctx.restore();
+
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.92)";
+      ctx.lineWidth = 3;
+      ctx.stroke(cardRect);
+    } else {
+      ctx.save();
+      ctx.clip(cardRect);
+      const backGrad = ctx.createLinearGradient(-148, -148, 148, 148);
+      backGrad.addColorStop(0, "#07120f");
+      backGrad.addColorStop(1, "#142a25");
+      ctx.fillStyle = backGrad;
+      ctx.fillRect(-148, -148, 296, 296);
+
+      ctx.save();
+      ctx.scale(116 / 24, 116 / 24);
+      ctx.translate(-12, -12);
+      ctx.shadowColor = "rgba(255, 92, 176, 0.55)";
+      ctx.shadowBlur = 18;
+      ctx.fillStyle = "#ff5cb0";
+      ctx.fill(TG_ICON);
+      ctx.strokeStyle = "#5f0738";
+      ctx.lineWidth = 1.2;
+      ctx.stroke(TG_ICON);
+      ctx.restore();
+      ctx.restore();
+
+      ctx.strokeStyle = "#ff5cb0";
+      ctx.lineWidth = 3.5;
+      ctx.stroke(cardRect);
+    }
+    ctx.restore();
+
+    // Подпись под QR
+    const brandW = 330;
+    const brandH = 52;
+    const brandX = qrColCenterX - brandW / 2;
+    const brandY = 362;
+    const brandPath = roundRectPath(brandX, brandY, brandW, brandH, 14);
+    ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,0.45)";
+    ctx.shadowBlur = 22;
+    ctx.shadowOffsetY = 10;
+    ctx.fillStyle = "rgba(6, 14, 12, 0.9)";
+    ctx.fill(brandPath);
+    ctx.restore();
+    ctx.strokeStyle = "#ff5cb0";
+    ctx.lineWidth = 2.5;
+    ctx.stroke(brandPath);
+
+    const [bLeftRaw = "ПОДСЛУШАННО", bRightRaw = "42"] = (inpQrBrand.value || "ПОДСЛУШАННО | 42").split("|");
+    const bLeft = bLeftRaw.trim().toUpperCase();
+    const bRight = bRightRaw.trim().toUpperCase();
+    ctx.font = "900 24px Montserrat, sans-serif";
+    const wLeft = ctx.measureText(bRight ? bLeft + " " : bLeft).width;
+    const wRight = bRight ? ctx.measureText(bRight).width : 0;
+    const startBx = qrColCenterX - (wLeft + wRight) / 2;
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(bRight ? bLeft + " " : bLeft, startBx, brandY + brandH / 2 + 1);
+    if (bRight) {
+      ctx.fillStyle = "#b7f36b";
+      ctx.fillText(bRight, startBx + wLeft, brandY + brandH / 2 + 1);
+    }
+
+    ctx.restore();
+  }
+
+  function drawTikTokSafeZone(cw, ch) {
+    ctx.save();
+    ctx.fillStyle = "rgba(255, 255, 255, 0.14)";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
+    ctx.lineWidth = 2;
+
+    // Правые иконки TikTok (лайк/коммент/репост)
+    const rx = cw - cw * 0.085;
+    const rSize = cw * 0.048;
+    [0.48, 0.56, 0.64, 0.72].forEach(ryFrac => {
+      ctx.beginPath();
+      ctx.arc(rx, ch * ryFrac, rSize * 0.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    });
+
+    // Нижняя зона описания TikTok
+    ctx.setLineDash([10, 8]);
+    ctx.strokeStyle = "rgba(255, 92, 176, 0.55)";
+    ctx.strokeRect(cw * 0.04, ch * 0.80, cw * 0.78, ch * 0.14);
+    ctx.font = `800 ${Math.round(cw * 0.022)}px Montserrat, sans-serif`;
+    ctx.fillStyle = "rgba(255, 92, 176, 0.75)";
+    ctx.fillText("ЗОНА ОПИСАНИЯ TIKTOK (ЛУЧШЕ НЕ ПЕРЕКРЫВАТЬ)", cw * 0.055, ch * 0.835);
+    ctx.restore();
+  }
+
+  function renderFrame(t, forExport = false) {
+    const { w: cw, h: ch } = getCanvasSize();
+    if (canvas.width !== cw || canvas.height !== ch) {
+      canvas.width = cw;
+      canvas.height = ch;
+    }
+
+    ctx.clearRect(0, 0, cw, ch);
+
+    // 1. Фон или Видео пользователя
+    if (hasVideo && bgVideo.readyState >= 2) {
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(0, 0, cw, ch);
+      const vw = bgVideo.videoWidth;
+      const vh = bgVideo.videoHeight;
+      const fit = videoFitEl.value;
+      const sc = fit === "cover" ? Math.max(cw / vw, ch / vh) : Math.min(cw / vw, ch / vh);
+      const dw = vw * sc;
+      const dh = vh * sc;
+      ctx.drawImage(bgVideo, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
+    } else {
+      const fbg = fallbackBgEl.value;
+      if (fbg === "chroma") {
+        ctx.fillStyle = "#00ff00";
+        ctx.fillRect(0, 0, cw, ch);
+      } else if (fbg === "dark") {
+        ctx.fillStyle = "#060a09";
+        ctx.fillRect(0, 0, cw, ch);
+      }
+    }
+
+    // 2. Тайминг показа плашки
+    const fromT = parseFloat(showFromEl.value) || 0;
+    const toT = parseFloat(showToEl.value) || 0;
+    const visibleNow = t >= fromT && (toT <= 0 || t <= toT);
+
+    const tr = getBannerTransform(cw, ch);
+
+    if (visibleNow) {
+      ctx.save();
+      ctx.translate(tr.cx, tr.cy);
+      ctx.rotate(tr.rot);
+      ctx.scale(tr.scale, tr.scale);
+      drawBannerContent(Math.max(0, t - fromT));
+      ctx.restore();
+    }
+
+    // 3. Направляющие редактора (только в превью, в видео НЕ попадают)
+    if (!forExport) {
+      if (chkSafeZone.checked && cw / ch < 0.75) {
+        drawTikTokSafeZone(cw, ch);
+      }
+      if (chkShowGuides.checked) {
+        ctx.save();
+        ctx.translate(tr.cx, tr.cy);
+        ctx.rotate(tr.rot);
+        ctx.scale(tr.scale, tr.scale);
+        ctx.setLineDash([14, 10]);
+        ctx.strokeStyle = visibleNow ? "rgba(163, 240, 72, 0.7)" : "rgba(255, 92, 176, 0.5)";
+        ctx.lineWidth = 3 / tr.scale;
+        ctx.strokeRect(-570, -240, 1140, 480);
+
+        // Уголок масштаба
+        ctx.setLineDash([]);
+        ctx.fillStyle = "#a3f048";
+        ctx.strokeStyle = "#050908";
+        ctx.lineWidth = 3 / tr.scale;
+        ctx.beginPath();
+        ctx.arc(570, 240, 14 / tr.scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+  }
+
+  // Главный цикл превью
+  function tick(now) {
+    const dt = (now - lastFrameNow) / 1000;
+    lastFrameNow = now;
+
+    if (!isRecording) {
+      if (hasVideo) {
+        const cur = bgVideo.currentTime || 0;
+        const dur = bgVideo.duration || 10.5;
+        virtualTime = cur;
+        seekBar.value = cur.toFixed(2);
+        timeLabel.textContent = `${cur.toFixed(1)} / ${dur.toFixed(1)}с`;
+      } else {
+        if (isPlaying) {
+          virtualTime = (virtualTime + dt) % 10.5;
+        }
+        seekBar.max = 10.5;
+        seekBar.value = virtualTime.toFixed(2);
+        timeLabel.textContent = `${virtualTime.toFixed(1)} / 10.5с`;
+      }
+      renderFrame(virtualTime, false);
+    }
+
+    requestAnimationFrame(tick);
+  }
+
+  document.fonts.ready.then(() => requestAnimationFrame(tick));
+
+  // Экспорт итогового видео (с твоим видео, звуком и плашкой)
+  btnExport.addEventListener("click", async () => {
+    if (isRecording) return;
+    await document.fonts.ready;
+
+    const fps = parseInt(fpsSelectEl.value, 10) || 30;
+    const { w: cw, h: ch } = getCanvasSize();
+    canvas.width = cw;
+    canvas.height = ch;
+
+    const useTransparent = !hasVideo && fallbackBgEl.value === "transparent";
+    const mimeCandidates = useTransparent
+      ? ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"]
+      : ["video/mp4;codecs=avc1.42E01E", "video/mp4", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"];
+
+    const mimeType = mimeCandidates.find(m => MediaRecorder.isTypeSupported(m)) || "";
+    if (!mimeType) {
+      statusText.textContent = "Браузер не поддерживает запись видео. Попробуй Chrome или Edge.";
+      return;
+    }
+
+    const isMp4 = mimeType.includes("mp4");
+    const ext = isMp4 ? "mp4" : "webm";
+
+    isRecording = true;
+    btnExport.disabled = true;
+    progressBar.style.width = "0%";
+
+    const canvasStream = canvas.captureStream(fps);
+    const tracks = [...canvasStream.getVideoTracks()];
+
+    if (hasVideo) {
+      ensureAudioGraph();
+      if (audioCtx && audioCtx.state === "suspended") {
+        await audioCtx.resume().catch(() => {});
+      }
+      if (audioDest) {
+        tracks.push(...audioDest.stream.getAudioTracks());
+      }
+    }
+
+    const combinedStream = new MediaStream(tracks);
+    const recorder = new MediaRecorder(combinedStream, {
+      mimeType,
+      videoBitsPerSecond: 16_000_000
+    });
+
+    const chunks = [];
+    recorder.ondataavailable = (e) => {
+      if (e.data && e.data.size > 0) chunks.push(e.data);
+    };
+
+    const totalDuration = hasVideo ? (bgVideo.duration || 10.5) : 10.5;
+    statusText.textContent = `Записываю видео (${cw}×${ch}, ${totalDuration.toFixed(1)} сек)... Не сворачивай вкладку.`;
+
+    recorder.onstop = () => {
+      const blob = new Blob(chunks, { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `tiktok-podslushano42.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+      isRecording = false;
+      btnExport.disabled = false;
+      progressBar.style.width = "100%";
+      statusText.textContent = `Готово! Видео скачано (.${ext.toUpperCase()}, ${(blob.size / 1024 / 1024).toFixed(2)} МБ).`;
+
+      if (hasVideo) {
+        bgVideo.loop = true;
+        bgVideo.currentTime = 0;
+        if (isPlaying) bgVideo.play().catch(() => {});
+      }
+    };
+
+    if (hasVideo) {
+      bgVideo.pause();
+      bgVideo.loop = false;
+      bgVideo.currentTime = 0;
+      await new Promise(res => {
+        const onSeeked = () => { bgVideo.removeEventListener("seeked", onSeeked); res(); };
+        bgVideo.addEventListener("seeked", onSeeked);
+      });
+      renderFrame(0, true);
+      recorder.start(100);
+      await bgVideo.play();
+
+      const stepVideoRec = () => {
+        const cur = bgVideo.currentTime || 0;
+        renderFrame(cur, true);
+        const pct = Math.min(100, (cur / totalDuration) * 100);
+        progressBar.style.width = `${pct.toFixed(1)}%`;
+
+        if (!bgVideo.ended && cur < totalDuration - 0.03) {
+          requestAnimationFrame(stepVideoRec);
+        } else {
+          setTimeout(() => recorder.stop(), 100);
+        }
+      };
+      requestAnimationFrame(stepVideoRec);
+    } else {
+      recorder.start(100);
+      const startRec = performance.now();
+      const stepStaticRec = (now) => {
+        const elapsed = (now - startRec) / 1000;
+        const clamped = Math.min(totalDuration, elapsed);
+        renderFrame(clamped, true);
+        progressBar.style.width = `${Math.min(100, (clamped / totalDuration) * 100).toFixed(1)}%`;
+
+        if (elapsed < totalDuration) {
+          requestAnimationFrame(stepStaticRec);
+        } else {
+          setTimeout(() => recorder.stop(), 80);
+        }
+      };
+      requestAnimationFrame(stepStaticRec);
+    }
+  });
+})();
+</script>
+
+</body>
+</html>
