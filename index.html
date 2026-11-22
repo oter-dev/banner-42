@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,600;0,700;0,800;0,900;1,800;1,900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,700;0,800;0,900;1,900&display=swap" rel="stylesheet">
 <style>
   * {
     box-sizing: border-box;
@@ -25,8 +25,8 @@
   }
 
   .banner {
-    width: 1240px;
-    height: 430px;
+    width: 1140px;
+    height: 480px;
     position: relative;
   }
 
@@ -35,7 +35,7 @@
     inset: 0;
     width: 100%;
     height: 100%;
-    filter: drop-shadow(0 24px 38px rgba(0, 0, 0, 0.75));
+    filter: drop-shadow(0 24px 40px rgba(0, 0, 0, 0.8));
     pointer-events: none;
   }
 
@@ -45,13 +45,13 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 56px;
-    padding: 36px 82px 36px 90px;
+    gap: 44px;
+    padding: 34px 48px 34px 54px;
     position: relative;
     z-index: 2;
   }
 
-  /* Левая текстовая зона */
+  /* Левая часть — максимально крупный и читаемый текст */
   .text-zone {
     flex: 1;
     min-width: 0;
@@ -66,29 +66,28 @@
     display: flex;
     align-items: center;
     gap: 14px;
-    margin-bottom: 22px;
-    flex-wrap: nowrap;
+    margin-bottom: 18px;
   }
 
   .badge {
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    font-size: 16px;
-    font-weight: 800;
-    letter-spacing: 1.8px;
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
     color: #ffffff;
-    background: rgba(255, 77, 166, 0.16);
-    border: 2px solid rgba(255, 77, 166, 0.55);
-    padding: 7px 16px;
-    border-radius: 10px;
+    background: rgba(255, 77, 166, 0.2);
+    border: 2.5px solid #ff5cb0;
+    padding: 7px 18px;
+    border-radius: 12px;
     white-space: nowrap;
   }
 
   .live-dot {
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
     background: #a3f048;
     box-shadow: 0 0 14px #a3f048;
@@ -100,35 +99,22 @@
     50% { opacity: 0.45; transform: scale(0.8); }
   }
 
-  .stamp-tag {
-    font-size: 16px;
-    font-weight: 800;
-    letter-spacing: 1.6px;
-    text-transform: uppercase;
-    color: #b7f36b;
-    background: rgba(163, 240, 72, 0.08);
-    border: 2px dashed rgba(163, 240, 72, 0.45);
-    padding: 7px 14px;
-    border-radius: 8px;
-    white-space: nowrap;
-  }
-
-  .news-pill {
-    font-size: 16px;
+  .news-tag {
+    font-size: 20px;
     font-weight: 900;
     font-style: italic;
-    letter-spacing: 3px;
+    letter-spacing: 2.5px;
     text-transform: uppercase;
-    color: #ff69b4;
-    text-shadow:
-      0 2px 0 #700a43,
-      0 0 14px rgba(255, 77, 166, 0.55);
+    color: #c7fa7f;
+    border: 2.5px dashed rgba(163, 240, 72, 0.6);
+    padding: 7px 16px;
+    border-radius: 10px;
     white-space: nowrap;
   }
 
   .slide-container {
     position: relative;
-    height: 184px;
+    height: 242px;
     width: 100%;
     overflow: hidden;
   }
@@ -150,46 +136,49 @@
   }
 
   .title {
-    font-size: 48px;
+    font-size: 62px;
     font-weight: 900;
     color: #ffffff;
-    line-height: 1.08;
-    letter-spacing: -0.8px;
+    line-height: 1.02;
+    letter-spacing: -1.2px;
     text-transform: uppercase;
-    text-shadow: 0 4px 22px rgba(0, 0, 0, 0.65);
+    text-shadow: 0 5px 22px rgba(0, 0, 0, 0.7);
   }
 
   .title span {
-    color: #ff5cb0;
+    display: inline-block;
+    color: #ff69b8;
+    paint-order: stroke fill;
+    -webkit-text-stroke: 7px #5f0738;
     text-shadow:
-      0 3px 0 #6e0940,
-      0 6px 24px rgba(255, 77, 166, 0.55);
+      0 5px 0 #420326,
+      0 10px 26px rgba(255, 77, 166, 0.55);
   }
 
   .subtitle {
-    font-size: 24px;
-    color: #cde3dc;
-    margin-top: 14px;
-    font-weight: 600;
-    line-height: 1.32;
+    font-size: 28px;
+    color: #d9eee6;
+    margin-top: 16px;
+    font-weight: 700;
+    line-height: 1.24;
   }
 
   .subtitle b {
     color: #b7f36b;
-    font-weight: 800;
+    font-weight: 900;
   }
 
-  /* Анимированный прогресс слайдов */
+  /* Толстые полосы прогресса — хорошо видны даже на маленьком баннере */
   .progress-dots {
     display: flex;
-    gap: 10px;
-    margin-top: 18px;
+    gap: 12px;
+    margin-top: 16px;
   }
 
   .dot {
-    width: 34px;
-    height: 6px;
-    border-radius: 4px;
+    width: 44px;
+    height: 8px;
+    border-radius: 6px;
     background: rgba(255, 255, 255, 0.16);
     overflow: hidden;
     position: relative;
@@ -197,7 +186,7 @@
   }
 
   .dot.active {
-    width: 68px;
+    width: 92px;
   }
 
   .dot.active::after {
@@ -205,7 +194,7 @@
     position: absolute;
     inset: 0;
     background: linear-gradient(90deg, #ff5cb0, #a3f048);
-    border-radius: 4px;
+    border-radius: 6px;
     transform-origin: left;
     animation: fillBar 3.5s linear forwards;
   }
@@ -215,41 +204,22 @@
     to { transform: scaleX(1); }
   }
 
-  /* Вертикальный разделитель */
-  .divider {
-    width: 2px;
-    height: 290px;
+  /* Правая колонка: QR-код + текст «ПОДСЛУШАННО 42» под ним */
+  .qr-column {
+    width: 330px;
     flex-shrink: 0;
-    margin-right: -28px;
-    margin-left: -28px;
-    background: linear-gradient(
-      180deg,
-      rgba(163, 240, 72, 0) 0%,
-      rgba(163, 240, 72, 0.45) 35%,
-      rgba(255, 87, 173, 0.55) 65%,
-      rgba(255, 87, 173, 0) 100%
-    );
-    border-radius: 2px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
   }
 
-  /* Правая зона с 3D QR-карточкой */
   .qr-wrapper {
-    width: 292px;
-    height: 292px;
+    width: 296px;
+    height: 296px;
     perspective: 1400px;
-    flex-shrink: 0;
     position: relative;
-  }
-
-  .qr-glow {
-    position: absolute;
-    inset: -22px;
-    border-radius: 44px;
-    background:
-      radial-gradient(circle at 28% 28%, rgba(163, 240, 72, 0.36) 0%, transparent 60%),
-      radial-gradient(circle at 75% 75%, rgba(255, 77, 166, 0.4) 0%, transparent 62%);
-    filter: blur(16px);
-    pointer-events: none;
   }
 
   .qr-card {
@@ -271,10 +241,10 @@
 
   .qr-front {
     background: #ffffff;
-    padding: 17px;
+    padding: 16px;
     box-shadow:
-      0 22px 48px rgba(0, 0, 0, 0.62),
-      0 0 0 2.5px rgba(163, 240, 72, 0.5);
+      0 20px 42px rgba(4, 18, 14, 0.55),
+      0 0 0 3px rgba(255, 255, 255, 0.92);
   }
 
   .qr-front img {
@@ -288,33 +258,54 @@
 
   .corner {
     position: absolute;
-    width: 24px;
-    height: 24px;
-    border: 4.5px solid #ff4da6;
+    width: 26px;
+    height: 26px;
+    border: 5px solid #ff4da6;
     pointer-events: none;
   }
-  .corner.tl { top: 9px; left: 9px; border-right: 0; border-bottom: 0; border-top-left-radius: 11px; }
-  .corner.tr { top: 9px; right: 9px; border-left: 0; border-bottom: 0; border-top-right-radius: 11px; }
-  .corner.bl { bottom: 9px; left: 9px; border-right: 0; border-top: 0; border-bottom-left-radius: 11px; }
-  .corner.br { bottom: 9px; right: 9px; border-left: 0; border-top: 0; border-bottom-right-radius: 11px; }
+  .corner.tl { top: 8px; left: 8px; border-right: 0; border-bottom: 0; border-top-left-radius: 11px; }
+  .corner.tr { top: 8px; right: 8px; border-left: 0; border-bottom: 0; border-top-right-radius: 11px; }
+  .corner.bl { bottom: 8px; left: 8px; border-right: 0; border-top: 0; border-bottom-left-radius: 11px; }
+  .corner.br { bottom: 8px; right: 8px; border-left: 0; border-top: 0; border-bottom-right-radius: 11px; }
 
   .qr-back {
     transform: rotateY(180deg);
-    background: linear-gradient(155deg, #9ce655 0%, #44c48a 52%, #1d8a8e 100%);
-    border: 3px solid #ff69b4;
+    background: linear-gradient(145deg, #07120f 0%, #142a25 100%);
+    border: 3.5px solid #ff5cb0;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 22px 48px rgba(0, 0, 0, 0.68);
+    box-shadow: 0 20px 42px rgba(4, 18, 14, 0.65);
   }
 
   .qr-back svg {
-    width: 108px;
-    height: 108px;
-    fill: #ff57ad;
-    stroke: #700a43;
-    stroke-width: 1px;
-    filter: drop-shadow(0 8px 20px rgba(112, 10, 67, 0.45));
+    width: 116px;
+    height: 116px;
+    fill: #ff5cb0;
+    stroke: #5f0738;
+    stroke-width: 1.2px;
+    filter: drop-shadow(0 0 22px rgba(255, 92, 176, 0.55));
+  }
+
+  /* Текст прямо под QR-кодом */
+  .qr-brand {
+    width: 100%;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 900;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: #ffffff;
+    background: rgba(6, 14, 12, 0.88);
+    border: 2.5px solid #ff5cb0;
+    padding: 10px 14px;
+    border-radius: 14px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+    white-space: nowrap;
+  }
+
+  .qr-brand span {
+    color: #b7f36b;
   }
 
   @keyframes spinPause {
@@ -330,82 +321,89 @@
 <body>
 
 <div class="banner">
-  <svg class="banner-bg" viewBox="0 0 1240 430" xmlns="http://www.w3.org/2000/svg">
+  <!-- Новая форма: горизонтальная HUD-карточка со скошенными углами и диагональным разделением -->
+  <svg class="banner-bg" viewBox="0 0 1140 480" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <linearGradient id="bgGrad" x1="0%" y1="30%" x2="100%" y2="75%">
+      <linearGradient id="darkLeftGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stop-color="#050908"/>
-        <stop offset="48%" stop-color="#071312"/>
-        <stop offset="80%" stop-color="#0e2c26"/>
-        <stop offset="100%" stop-color="#1b5444"/>
+        <stop offset="100%" stop-color="#0b1a17"/>
       </linearGradient>
 
-      <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="rgba(163,240,72,0.5)"/>
-        <stop offset="52%" stop-color="rgba(255,255,255,0.14)"/>
-        <stop offset="100%" stop-color="rgba(255,87,173,0.72)"/>
+      <linearGradient id="slimeRightGrad" x1="20%" y1="0%" x2="80%" y2="100%">
+        <stop offset="0%" stop-color="#b4e95f"/>
+        <stop offset="52%" stop-color="#58ce85"/>
+        <stop offset="100%" stop-color="#1b8e90"/>
       </linearGradient>
 
-      <radialGradient id="slimeGlow" cx="84%" cy="42%" r="44%">
-        <stop offset="0%" stop-color="rgba(163,240,72,0.28)"/>
-        <stop offset="60%" stop-color="rgba(40,184,153,0.14)"/>
-        <stop offset="100%" stop-color="rgba(40,184,153,0)"/>
-      </radialGradient>
+      <linearGradient id="hudBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#a3f048"/>
+        <stop offset="52%" stop-color="rgba(255,255,255,0.28)"/>
+        <stop offset="100%" stop-color="#ff5cb0"/>
+      </linearGradient>
 
-      <radialGradient id="pinkGlow" cx="76%" cy="88%" r="36%">
-        <stop offset="0%" stop-color="rgba(255,77,166,0.24)"/>
-        <stop offset="100%" stop-color="rgba(255,77,166,0)"/>
-      </radialGradient>
+      <linearGradient id="slashLine" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#a3f048"/>
+        <stop offset="50%" stop-color="#ff5cb0"/>
+        <stop offset="100%" stop-color="#ff85c8"/>
+      </linearGradient>
 
-      <clipPath id="cardClip">
-        <rect x="48" y="2" width="1190" height="426" rx="38" ry="38" transform="skewX(-6)"/>
+      <!-- Скошенные углы (верхний левый и нижний правый срезаны) -->
+      <clipPath id="hudClip">
+        <path d="M 52,4 L 1110,4 Q 1136,4 1136,30 L 1136,428 L 1088,476 L 30,476 Q 4,476 4,450 L 4,52 Z"/>
+      </clipPath>
+
+      <clipPath id="rightSlimeClip">
+        <polygon points="755,0 1140,0 1140,480 715,480"/>
       </clipPath>
     </defs>
 
-    <g clip-path="url(#cardClip)">
-      <rect x="0" y="0" width="1240" height="430" fill="url(#bgGrad)"/>
+    <g clip-path="url(#hudClip)">
+      <!-- Тёмный фон под крупный текст -->
+      <rect x="0" y="0" width="1140" height="480" fill="url(#darkLeftGrad)"/>
+      <circle cx="140" cy="400" r="220" fill="rgba(255, 77, 166, 0.08)"/>
+      <circle cx="520" cy="60" r="190" fill="rgba(163, 240, 72, 0.06)"/>
 
-      <g fill="rgba(163, 240, 72, 0.055)">
-        <path d="M880,40 C950,10 1030,50 1010,115 C990,180 900,170 860,120 C820,70 830,60 880,40 Z"/>
-        <path d="M1080,190 C1160,150 1220,220 1190,295 C1160,370 1050,360 1030,290 C1010,220 1030,215 1080,190 Z"/>
-        <path d="M720,290 C780,260 850,305 825,365 C800,425 690,410 675,355 C660,300 680,310 720,290 Z"/>
-        <path d="M140,-20 C210,-10 245,55 190,105 C135,155 60,115 55,55 C50,-5 90,-25 140,-20 Z"/>
+      <!-- Правая витрина в цветах логотипа -->
+      <g clip-path="url(#rightSlimeClip)">
+        <rect x="700" y="0" width="440" height="480" fill="url(#slimeRightGrad)"/>
+        <g fill="rgba(255, 255, 255, 0.17)">
+          <path d="M800,30 C860,0 930,35 908,95 C886,155 810,145 782,102 C754,59 768,48 800,30 Z"/>
+          <path d="M1010,75 C1080,45 1135,95 1110,165 C1085,235 995,215 978,158 C961,101 972,92 1010,75 Z"/>
+          <path d="M775,345 C840,315 905,365 880,430 C855,495 755,480 742,418 C729,356 742,362 775,345 Z"/>
+        </g>
+        <g fill="rgba(12, 92, 86, 0.14)">
+          <path d="M1020,310 C1085,280 1140,335 1115,400 C1090,465 995,445 982,385 C969,325 985,328 1020,310 Z"/>
+        </g>
       </g>
-      <g fill="rgba(45, 200, 175, 0.065)">
-        <path d="M1000,-10 C1090,-20 1150,45 1115,115 C1080,185 975,165 960,100 C945,35 950,0 1000,-10 Z"/>
-        <path d="M510,20 C585,5 625,75 580,130 C535,185 450,150 450,90 C450,30 465,30 510,20 Z"/>
-      </g>
 
-      <rect x="0" y="0" width="1240" height="430" fill="url(#slimeGlow)"/>
-      <rect x="0" y="0" width="1240" height="430" fill="url(#pinkGlow)"/>
-
-      <polygon points="640,0 800,0 730,430 570,430" fill="rgba(255,255,255,0.025)"/>
+      <!-- Диагональный неоновый разделитель -->
+      <line x1="755" y1="0" x2="715" y2="480" stroke="url(#slashLine)" stroke-width="6"/>
     </g>
 
-    <rect x="48" y="2" width="1190" height="426" rx="38" ry="38"
-          transform="skewX(-6)"
-          fill="none" stroke="url(#borderGrad)" stroke-width="2.5"/>
+    <!-- Внешняя неоновая рамка -->
+    <path d="M 52,4 L 1110,4 Q 1136,4 1136,30 L 1136,428 L 1088,476 L 30,476 Q 4,476 4,450 L 4,52 Z"
+          fill="none" stroke="url(#hudBorder)" stroke-width="3.5"/>
   </svg>
 
   <div class="banner-inner">
     <div class="text-zone">
       <div class="top-row">
         <div class="badge"><span class="live-dot"></span>TG • НОВОСТНИК</div>
-        <div class="stamp-tag">42 КМ</div>
-        <div class="news-pill">NEWS</div>
+        <div class="news-tag">NEWS • 42 КМ</div>
       </div>
 
       <div class="slide-container">
         <div class="slide active">
-          <div class="title">ПОДСЛУШАННО <span>42</span></div>
-          <div class="subtitle">Самое <b>НИШЕВОЕ СМИ</b> в 42км</div>
+          <div class="title">НИШЕВОЕ<br><span>СМИ 42 КМ</span></div>
+          <div class="subtitle">Самое главное <b>без лишней воды</b></div>
         </div>
         <div class="slide">
-          <div class="title">ГЛАВНЫЙ <span>НОВОСТНИК</span></div>
-          <div class="subtitle">Инсайды, события и сводки <b>без воды</b></div>
+          <div class="title">ГЛАВНЫЙ<br><span>НОВОСТНИК</span></div>
+          <div class="subtitle">Свежие инсайды и сводки <b>24/7</b></div>
         </div>
         <div class="slide">
-          <div class="title">СКАНИРУЙ <span>QR</span></div>
-          <div class="subtitle">Подписывайся и будь в курсе <b>42км</b></div>
+          <div class="title">СКАНИРУЙ<br><span>QR-КОД</span></div>
+          <div class="subtitle">Залетай в ленту и будь <b>в курсе</b></div>
         </div>
       </div>
 
@@ -416,24 +414,24 @@
       </div>
     </div>
 
-    <div class="divider"></div>
-
-    <div class="qr-wrapper">
-      <div class="qr-glow"></div>
-      <div class="qr-card">
-        <div class="qr-face qr-front">
-          <span class="corner tl"></span>
-          <span class="corner tr"></span>
-          <span class="corner bl"></span>
-          <span class="corner br"></span>
-          <img src="qr-code.jpg" alt="">
-        </div>
-        <div class="qr-face qr-back">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/>
-          </svg>
+    <div class="qr-column">
+      <div class="qr-wrapper">
+        <div class="qr-card">
+          <div class="qr-face qr-front">
+            <span class="corner tl"></span>
+            <span class="corner tr"></span>
+            <span class="corner bl"></span>
+            <span class="corner br"></span>
+            <img src="qr-code.jpg" alt="">
+          </div>
+          <div class="qr-face qr-back">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/>
+            </svg>
+          </div>
         </div>
       </div>
+      <div class="qr-brand">ПОДСЛУШАННО <span>42</span></div>
     </div>
   </div>
 </div>
