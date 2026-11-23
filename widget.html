@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Yandex Music Widget</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: transparent; /* Прозрачный фон для OBS */
+            color: #fff;
+            overflow: hidden;
+            padding: 16px; /* Запас под тень и анимацию */
+        }
+
+        .widget-container {
+            display: flex;
+            align-items: center;
+            background: rgba(18, 18, 18, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 10px;
+            width: 360px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                        transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+        }
+
+        .widget-container.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .cover-wrapper {
+            position: relative;
+            width: 56px;
+            height: 56px;
+            border-radius: 8px;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: #2a2a2a;
+        }
+
+        .cover-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .cover-wrapper img.loaded {
+            opacity: 1;
+        }
+
+        .track-info {
+            margin-left: 12px;
+            min-width: 0; /* Не даёт длинному тексту сжимать эквалайзер */
+            overflow: hidden;
+            flex-grow: 1;
+        }
+
+        .track-title {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #f3f3f3;
+            margin-bottom: 4px;
+        }
+
+        .track-artist {
+            font-size: 12px;
+            font-weight: 400;
+            color: #a0a0a0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .equalizer {
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            height: 14px;
+            margin-left: 10px;
+            flex-shrink: 0;
+        }
+
+        .equalizer span {
+            width: 3px;
+            height: 4px;
+            border-radius: 2px;
+            background: #1ed760;
+            animation: bounce 1.2s infinite ease-in-out;
+            transition: height 0.2s ease;
+        }
+
+        .equalizer span:nth-child(2) { animation-delay: -0.4s; }
+        .equalizer span:nth-child(3) { animation-delay: -0.8s; }
+
+        @keyframes bounce {
+            0%, 100% { height: 4px; }
+            50% { height: 14px; }
+        }
+
+        .paused .equalizer span {
+            animation: none;
+            height: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="widget" class="widget-container">
+        <div class="cover-wrapper">
+            <img id="cover" alt="">
+        </div>
+        <div class="track-info">
+            <div id="title" class="track-title">Ожидание музыки...</div>
+            <div id="artist" class="track-artist">—</div>
+        </div>
+        <div class="equalizer">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
+
+    <script>
+        const WS_URL = 'wss://yandex-bridge.kirillselivonchik0.workers.dev/';
+
+        const widget = document.getElementById('widget');
+        const titleEl = document.getElementById('title');
+        const artistEl = document.getElementById('artist');
+        const coverEl = document.getElementById('cover');
+
+        let ws = null;
+        let reconnectTimer = null;
+        let currentCover = '';
+
+        coverEl.addEventListener('load', () => {
+            coverEl.classList.add('loaded');
+        });
+
+        coverEl.addEventListener('error', () => {
+            coverEl.classList.remove('loaded');
+            coverEl.removeAttribute('src');
+        });
+
+        function scheduleReconnect() {
+            if (reconnectTimer) return;
+            reconnectTimer = setTimeout(() => {
+                reconnectTimer = null;
+                connectWebSocket();
+            }, 3000);
+        }
+
+        function connectWebSocket() {
+            if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
+                return;
+            }
+
+            try {
+                ws = new WebSocket(WS_URL);
+            } catch (e) {
+                scheduleReconnect();
+                return;
+            }
+
+            ws.onopen = () => {
+                if (reconnectTimer) {
+                    clearTimeout(reconnectTimer);
+                    reconnectTimer = null;
+                }
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data && typeof data === 'object') {
+                        updateWidget(data);
+                    }
+                } catch (e) {
+                    console.error('Invalid JSON received:', e);
+                }
+            };
+
+            ws.onerror = () => {
+                try {
+                    ws.close();
+                } catch (_) {}
+            };
+
+            ws.onclose = () => {
+                ws = null;
+                scheduleReconnect();
+            };
+        }
+
+        function updateWidget(data) {
+            const title = typeof data.title === 'string' ? data.title.trim() : '';
+
+            if (!title) {
+                widget.classList.remove('visible');
+                return;
+            }
+
+            titleEl.textContent = title;
+            artistEl.textContent = (typeof data.artist === 'string' && data.artist.trim()) ? data.artist.trim() : '—';
+
+            const nextCover = typeof data.cover === 'string' ? data.cover.trim() : '';
+            if (nextCover !== currentCover) {
+                currentCover = nextCover;
+                if (nextCover) {
+                    coverEl.classList.remove('loaded');
+                    coverEl.src = nextCover;
+                } else {
+                    coverEl.classList.remove('loaded');
+                    coverEl.removeAttribute('src');
+                }
+            }
+
+            widget.classList.add('visible');
+            widget.classList.toggle('paused', !data.isPlaying);
+        }
+
+        connectWebSocket();
+    </script>
+</body>
+</html>
