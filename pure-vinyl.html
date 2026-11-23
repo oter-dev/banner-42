@@ -44,7 +44,6 @@
             transform: scale(1);
         }
 
-        /* Сцена винила */
         .vinyl-stage {
             position: relative;
             width: 228px;
@@ -52,7 +51,6 @@
             flex-shrink: 0;
         }
 
-        /* Цветное свечение от самой обложки позади диска */
         .vinyl-aura {
             position: absolute;
             inset: -14px;
@@ -82,7 +80,6 @@
             transform: scale(0.92);
         }
 
-        /* Вращающаяся пластинка */
         .vinyl-disc {
             position: relative;
             z-index: 1;
@@ -124,7 +121,6 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Центральная наклейка с обложкой */
         .vinyl-label {
             position: relative;
             width: 112px;
@@ -153,7 +149,6 @@
             opacity: 1;
         }
 
-        /* Металлический центр (шпиндель) */
         .vinyl-spindle {
             position: absolute;
             top: 50%;
@@ -181,7 +176,6 @@
             background: #0c0c10;
         }
 
-        /* Неподвижный глянцевый блик поверх крутящихся дорожек */
         .vinyl-shine {
             position: absolute;
             inset: 0;
@@ -199,7 +193,6 @@
             z-index: 4;
         }
 
-        /* Тонарм */
         .tonearm {
             position: absolute;
             top: -6px;
@@ -271,7 +264,6 @@
             box-shadow: none;
         }
 
-        /* Опциональная компактная подпись под диском (выключена по умолчанию) */
         .caption {
             display: none;
             max-width: 280px;
@@ -339,9 +331,8 @@
 
     <script>
         const WS_URL = 'wss://yandex-bridge.kirillselivonchik0.workers.dev/';
-
-        // Поставьте true, если захотите видеть маленькую подпись с названием трека под диском
         const SHOW_TITLE = false;
+        const STALE_TIMEOUT_MS = 25000;
 
         const widget = document.getElementById('widget');
         const coverEl = document.getElementById('cover');
@@ -350,13 +341,13 @@
         const titleEl = document.getElementById('title');
         const artistEl = document.getElementById('artist');
 
-        if (SHOW_TITLE) {
-            captionEl.classList.add('enabled');
-        }
+        if (SHOW_TITLE) captionEl.classList.add('enabled');
 
         let ws = null;
         let reconnectTimer = null;
         let currentCover = '';
+        let lastStateKey = '';
+        let lastMessageAt = Date.now();
 
         [coverEl, bgCoverEl].forEach((img) => {
             img.addEventListener('load', () => img.classList.add('loaded'));
@@ -371,7 +362,7 @@
             reconnectTimer = setTimeout(() => {
                 reconnectTimer = null;
                 connectWebSocket();
-            }, 3000);
+            }, 2000);
         }
 
         function connectWebSocket() {
@@ -385,6 +376,7 @@
             }
 
             ws.onopen = () => {
+                lastMessageAt = Date.now();
                 if (reconnectTimer) {
                     clearTimeout(reconnectTimer);
                     reconnectTimer = null;
@@ -392,12 +384,11 @@
             };
 
             ws.onmessage = (event) => {
+                lastMessageAt = Date.now();
                 try {
                     const data = JSON.parse(event.data);
                     if (data && typeof data === 'object') updateWidget(data);
-                } catch (e) {
-                    console.error('Invalid JSON:', e);
-                }
+                } catch (_) {}
             };
 
             ws.onerror = () => {
@@ -413,14 +404,22 @@
         function updateWidget(data) {
             const title = typeof data.title === 'string' ? data.title.trim() : '';
             if (!title) {
+                lastStateKey = '';
                 widget.classList.remove('visible');
                 return;
             }
 
-            titleEl.textContent = title;
-            artistEl.textContent = (typeof data.artist === 'string' && data.artist.trim()) ? data.artist.trim() : '—';
-
+            const artist = (typeof data.artist === 'string' && data.artist.trim()) ? data.artist.trim() : '—';
             const nextCover = typeof data.cover === 'string' ? data.cover.trim() : '';
+            const playing = Boolean(data.isPlaying);
+
+            const stateKey = `${title}|${artist}|${nextCover}|${playing}`;
+            if (stateKey === lastStateKey) return;
+            lastStateKey = stateKey;
+
+            titleEl.textContent = title;
+            artistEl.textContent = artist;
+
             if (nextCover !== currentCover) {
                 currentCover = nextCover;
                 [coverEl, bgCoverEl].forEach((img) => {
@@ -433,10 +432,17 @@
                 });
             }
 
-            const playing = Boolean(data.isPlaying);
             widget.classList.add('visible');
             widget.classList.toggle('paused', !playing);
         }
+
+        setInterval(() => {
+            if (ws && ws.readyState === WebSocket.OPEN && Date.now() - lastMessageAt > STALE_TIMEOUT_MS) {
+                try { ws.close(); } catch (_) {}
+            } else if (!ws && !reconnectTimer) {
+                connectWebSocket();
+            }
+        }, 5000);
 
         connectWebSocket();
     </script>
