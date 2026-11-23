@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Yandex Music — Pure Vinyl</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            user-select: none;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            overflow: hidden;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+        }
+
+        .widget-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            opacity: 0;
+            transform: scale(0.88);
+            transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+                        transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+        }
+
+        .widget-container.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Сцена винила */
+        .vinyl-stage {
+            position: relative;
+            width: 228px;
+            height: 228px;
+            flex-shrink: 0;
+        }
+
+        /* Цветное свечение от самой обложки позади диска */
+        .vinyl-aura {
+            position: absolute;
+            inset: -14px;
+            border-radius: 50%;
+            overflow: hidden;
+            filter: blur(26px) saturate(2) brightness(0.8);
+            opacity: 0.72;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            z-index: 0;
+        }
+
+        .vinyl-aura img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .vinyl-aura img.loaded {
+            opacity: 1;
+        }
+
+        .paused .vinyl-aura {
+            opacity: 0.22;
+            transform: scale(0.92);
+        }
+
+        /* Вращающаяся пластинка */
+        .vinyl-disc {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background:
+                radial-gradient(
+                    circle at center,
+                    transparent 0 58px,
+                    rgba(255, 255, 255, 0.06) 59px,
+                    transparent 60px
+                ),
+                repeating-radial-gradient(
+                    circle at center,
+                    #121216 0px,
+                    #121216 2px,
+                    #1e1e24 3px,
+                    #0e0e12 4px
+                );
+            box-shadow:
+                0 16px 40px rgba(0, 0, 0, 0.75),
+                inset 0 0 0 2px rgba(255, 255, 255, 0.1),
+                inset 0 0 24px rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: spin 6s linear infinite;
+            transition: filter 0.4s ease;
+        }
+
+        .paused .vinyl-disc {
+            animation-play-state: paused;
+            filter: brightness(0.82);
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Центральная наклейка с обложкой */
+        .vinyl-label {
+            position: relative;
+            width: 112px;
+            height: 112px;
+            border-radius: 50%;
+            padding: 3px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.08));
+            box-shadow:
+                0 0 0 4px #101014,
+                0 0 18px rgba(0, 0, 0, 0.8);
+            overflow: hidden;
+        }
+
+        .vinyl-label img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            display: block;
+            background: #222228;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .vinyl-label img.loaded {
+            opacity: 1;
+        }
+
+        /* Металлический центр (шпиндель) */
+        .vinyl-spindle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 18px;
+            height: 18px;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #f4f4f6, #7a7a85 70%, #3a3a42);
+            box-shadow:
+                0 0 0 2px rgba(0, 0, 0, 0.65),
+                0 2px 6px rgba(0, 0, 0, 0.8);
+            z-index: 3;
+        }
+
+        .vinyl-spindle::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 6px;
+            height: 6px;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            background: #0c0c10;
+        }
+
+        /* Неподвижный глянцевый блик поверх крутящихся дорожек */
+        .vinyl-shine {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: conic-gradient(
+                from 30deg,
+                transparent 0deg 32deg,
+                rgba(255, 255, 255, 0.14) 52deg,
+                rgba(255, 210, 120, 0.06) 66deg,
+                transparent 88deg 210deg,
+                rgba(255, 255, 255, 0.10) 232deg,
+                transparent 262deg 360deg
+            );
+            pointer-events: none;
+            z-index: 4;
+        }
+
+        /* Тонарм */
+        .tonearm {
+            position: absolute;
+            top: -6px;
+            right: -10px;
+            width: 32px;
+            height: 128px;
+            transform-origin: 16px 16px;
+            transform: rotate(20deg);
+            transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+            z-index: 5;
+        }
+
+        .paused .tonearm {
+            transform: rotate(-10deg);
+        }
+
+        .tonearm-base {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #ffffff, #7e7e8a 70%, #3d3d45);
+            box-shadow:
+                0 4px 12px rgba(0, 0, 0, 0.75),
+                inset 0 1px 2px rgba(255, 255, 255, 0.7);
+        }
+
+        .tonearm-rod {
+            position: absolute;
+            top: 24px;
+            left: 14px;
+            width: 4px;
+            height: 78px;
+            border-radius: 3px;
+            background: linear-gradient(90deg, #8b8b96, #ffffff, #6b6b75);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7);
+        }
+
+        .tonearm-head {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            width: 15px;
+            height: 22px;
+            border-radius: 3px;
+            background: linear-gradient(160deg, #2d2d35, #121217);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.8);
+            transform: rotate(16deg);
+        }
+
+        .tonearm-head::after {
+            content: '';
+            position: absolute;
+            bottom: 3px;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            transform: translateX(-50%);
+            border-radius: 50%;
+            background: #ffcc00;
+            box-shadow: 0 0 8px #ffcc00;
+        }
+
+        .paused .tonearm-head::after {
+            background: #666;
+            box-shadow: none;
+        }
+
+        /* Опциональная компактная подпись под диском (выключена по умолчанию) */
+        .caption {
+            display: none;
+            max-width: 280px;
+            padding: 7px 16px;
+            border-radius: 999px;
+            background: rgba(14, 14, 18, 0.78);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+
+        .caption.enabled {
+            display: block;
+        }
+
+        .caption-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .caption-artist {
+            font-size: 11px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.68);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="widget" class="widget-container">
+        <div class="vinyl-stage">
+            <div class="vinyl-aura">
+                <img id="bgCover" alt="">
+            </div>
+
+            <div class="vinyl-disc">
+                <div class="vinyl-label">
+                    <img id="cover" alt="">
+                </div>
+                <div class="vinyl-spindle"></div>
+            </div>
+
+            <div class="vinyl-shine"></div>
+
+            <div class="tonearm">
+                <div class="tonearm-base"></div>
+                <div class="tonearm-rod"></div>
+                <div class="tonearm-head"></div>
+            </div>
+        </div>
+
+        <div id="caption" class="caption">
+            <div id="title" class="caption-title"></div>
+            <div id="artist" class="caption-artist"></div>
+        </div>
+    </div>
+
+    <script>
+        const WS_URL = 'wss://yandex-bridge.kirillselivonchik0.workers.dev/';
+
+        // Поставьте true, если захотите видеть маленькую подпись с названием трека под диском
+        const SHOW_TITLE = false;
+
+        const widget = document.getElementById('widget');
+        const coverEl = document.getElementById('cover');
+        const bgCoverEl = document.getElementById('bgCover');
+        const captionEl = document.getElementById('caption');
+        const titleEl = document.getElementById('title');
+        const artistEl = document.getElementById('artist');
+
+        if (SHOW_TITLE) {
+            captionEl.classList.add('enabled');
+        }
+
+        let ws = null;
+        let reconnectTimer = null;
+        let currentCover = '';
+
+        [coverEl, bgCoverEl].forEach((img) => {
+            img.addEventListener('load', () => img.classList.add('loaded'));
+            img.addEventListener('error', () => {
+                img.classList.remove('loaded');
+                img.removeAttribute('src');
+            });
+        });
+
+        function scheduleReconnect() {
+            if (reconnectTimer) return;
+            reconnectTimer = setTimeout(() => {
+                reconnectTimer = null;
+                connectWebSocket();
+            }, 3000);
+        }
+
+        function connectWebSocket() {
+            if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) return;
+
+            try {
+                ws = new WebSocket(WS_URL);
+            } catch (_) {
+                scheduleReconnect();
+                return;
+            }
+
+            ws.onopen = () => {
+                if (reconnectTimer) {
+                    clearTimeout(reconnectTimer);
+                    reconnectTimer = null;
+                }
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data && typeof data === 'object') updateWidget(data);
+                } catch (e) {
+                    console.error('Invalid JSON:', e);
+                }
+            };
+
+            ws.onerror = () => {
+                try { ws.close(); } catch (_) {}
+            };
+
+            ws.onclose = () => {
+                ws = null;
+                scheduleReconnect();
+            };
+        }
+
+        function updateWidget(data) {
+            const title = typeof data.title === 'string' ? data.title.trim() : '';
+            if (!title) {
+                widget.classList.remove('visible');
+                return;
+            }
+
+            titleEl.textContent = title;
+            artistEl.textContent = (typeof data.artist === 'string' && data.artist.trim()) ? data.artist.trim() : '—';
+
+            const nextCover = typeof data.cover === 'string' ? data.cover.trim() : '';
+            if (nextCover !== currentCover) {
+                currentCover = nextCover;
+                [coverEl, bgCoverEl].forEach((img) => {
+                    img.classList.remove('loaded');
+                    if (nextCover) {
+                        img.src = nextCover;
+                    } else {
+                        img.removeAttribute('src');
+                    }
+                });
+            }
+
+            const playing = Boolean(data.isPlaying);
+            widget.classList.add('visible');
+            widget.classList.toggle('paused', !playing);
+        }
+
+        connectWebSocket();
+    </script>
+</body>
+</html>
